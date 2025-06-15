@@ -1,11 +1,11 @@
 import React from "react";
-import { BlockNoteViewRaw as BlockNoteView } from "@blocknote/react";
+import { BlockNoteView } from "@blocknote/shadcn";
 import type { BlockNoteEditor } from "@blocknote/core";
 import "@blocknote/core/style.css";
-import "@blocknote/react/style.css";
+import "@blocknote/shadcn/style.css";
 
 interface EditorContentProps {
-	editor: BlockNoteEditor;
+	editor: any;
 	theme: "light" | "dark";
 	onContentChange: () => void;
 }

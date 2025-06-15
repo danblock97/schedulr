@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
@@ -50,31 +50,33 @@ const Editor: React.FC<EditorProps> = ({ pageData, onPageUpdate }) => {
 	const [currentTheme, setCurrentTheme] = useState<"light" | "dark">("light");
 	const isMounted = useRef(false);
 
+	// Memoise the initial content so it is only recalculated when the page id
+	// changes. By recreating the editor when the id changes we can reliably rely
+	// on the `initialContent` option instead of replacing blocks manually (which
+	// could be called before the internal ProseMirror view is ready and caused
+	// `r.view is undefined` crashes).
+	const initialContent = useMemo(
+		() => getInitialContent(pageData.content),
+		[pageData.id]
+	);
+
 	const editor = useBlockNote(
 		{
-			// initialContent is only used on first render of the hook,
-			// which was causing issues with re-renders.
-			// Content is now loaded via useEffect.
+			initialContent: initialContent,
 		},
 		[pageData.id]
 	);
 
 	useEffect(() => {
+		// Whenever the page data changes (i.e. a new page is opened) reset local
+		// states. Because the editor instance is recreated with the proper
+		// `initialContent`, we no longer have to manually mutate its document.
 		setTitle(pageData.title || "Untitled");
 		const newContent = getInitialContent(pageData.content);
-		if (editor) {
-			// This is a workaround to force update the editor content when pageData changes
-			// as initialContent is only used on first render.
-			const currentEditorContent = JSON.stringify(editor.document);
-			const newPageContent = JSON.stringify(newContent);
-			if (currentEditorContent !== newPageContent) {
-				editor.replaceBlocks(editor.document, newContent || []);
-			}
-		}
 		setContent(newContent || []);
 		setSavingStatus("idle");
 		isMounted.current = false; // Reset for the new page
-	}, [pageData, editor]);
+	}, [pageData]);
 
 	useEffect(() => {
 		const detectTheme = () => {
