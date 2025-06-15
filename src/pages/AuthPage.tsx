@@ -28,38 +28,14 @@ const AuthPage = () => {
 	const [username, setUsername] = useState(""); // For signup
 	const [error, setError] = useState("");
 	const [isLoading, setIsLoading] = useState(false);
+	const [showConfirmationMessage, setShowConfirmationMessage] = useState(false);
 
 	useEffect(() => {
-		const currentMode = searchParams.get("mode");
-		if (currentMode === "login" || currentMode === "signup") {
-			setMode(currentMode);
-		} else {
-			setMode("login"); // Default to login
-			setSearchParams({ mode: "login" });
-		}
+		// ... keep existing code (useEffect for mode)
 	}, [searchParams, setSearchParams]);
 
 	useEffect(() => {
-		// If user is already logged in, redirect from auth page
-		const checkSession = async () => {
-			const {
-				data: { session },
-			} = await supabase.auth.getSession();
-			if (session) {
-				navigate("/");
-			}
-		};
-		checkSession();
-
-		const {
-			data: { subscription },
-		} = supabase.auth.onAuthStateChange((event, session) => {
-			if (session) {
-				navigate("/");
-			}
-		});
-
-		return () => subscription.unsubscribe();
+		// ... keep existing code (useEffect for session check)
 	}, [navigate]);
 
 	const toggleMode = () => {
@@ -70,6 +46,7 @@ const AuthPage = () => {
 		setEmail("");
 		setPassword("");
 		setUsername("");
+		setShowConfirmationMessage(false);
 	};
 
 	const handleSubmit = async (e: React.FormEvent) => {
@@ -88,7 +65,7 @@ const AuthPage = () => {
 				password,
 				options: {
 					data: { username: username.trim() },
-					// emailRedirectTo is good practice, though less critical if email confirmation is off
+					// emailRedirectTo is critical for email confirmation flow
 					emailRedirectTo: `${window.location.origin}/`,
 				},
 			});
@@ -96,36 +73,29 @@ const AuthPage = () => {
 			if (signUpError) {
 				setError(signUpError.message);
 			} else if (data.user) {
-				// User is created and session should be active as email confirmation is off
-				toast({
-					title: "Signup Successful!",
-					description: "You are now logged in.",
-				});
-				navigate("/");
+				if (data.session) {
+					// This case happens if email confirmation is disabled. User is logged in.
+					toast({
+						title: "Signup Successful!",
+						description: "You are now logged in.",
+					});
+					navigate("/");
+				} else {
+					// This case happens if email confirmation is enabled.
+					setShowConfirmationMessage(true);
+					toast({
+						title: "Registration submitted!",
+						description: "Please check your email to complete your signup.",
+					});
+				}
 			} else {
-				// Fallback, though with email confirmation off, this shouldn't be common
 				setError(
 					"An unexpected error occurred during signup. Please try again."
 				);
 			}
 		} else {
 			// login mode
-			const { data, error: signInError } =
-				await supabase.auth.signInWithPassword({
-					email,
-					password,
-				});
-
-			if (signInError) {
-				setError(signInError.message);
-			} else if (data.user) {
-				toast({ title: "Login Successful!", description: "Welcome back!" });
-				navigate("/");
-			} else {
-				setError(
-					"An unexpected error occurred during login. Please try again."
-				);
-			}
+			// ... keep existing code (login logic)
 		}
 
 		setIsLoading(false);
@@ -140,111 +110,132 @@ const AuthPage = () => {
 				transition={{ duration: 0.5, ease: "easeInOut" }}
 			>
 				<Card className="w-full shadow-xl rounded-lg">
-					<CardHeader className="text-center">
-						<AnimatePresence mode="wait">
-							<motion.div
-								key={mode}
-								initial={{ opacity: 0, y: -10 }}
-								animate={{ opacity: 1, y: 0 }}
-								exit={{ opacity: 0, y: 10 }}
-								transition={{ duration: 0.2 }}
-							>
-								<CardTitle className="text-3xl font-bold">
-									{mode === "login" ? "Welcome Back!" : "Create Account"}
+					{showConfirmationMessage ? (
+						<>
+							<CardHeader className="text-center">
+								<CardTitle className="text-2xl font-bold">
+									Check your email
 								</CardTitle>
 								<CardDescription>
-									{mode === "login"
-										? "Log in to access Schedulr."
-										: "Sign up to start organizing."}
+									We've sent a verification link to <strong>{email}</strong>.
+									Please click the link to complete your registration.
 								</CardDescription>
-							</motion.div>
-						</AnimatePresence>
-					</CardHeader>
-					<CardContent>
-						<form onSubmit={handleSubmit} className="space-y-6">
-							<AnimatePresence>
-								{mode === "signup" && (
+							</CardHeader>
+							<CardFooter className="flex-col">
+								<Button variant="link" onClick={toggleMode} className="mt-4">
+									Back to Login
+								</Button>
+							</CardFooter>
+						</>
+					) : (
+						<>
+							<CardHeader className="text-center">
+								<AnimatePresence mode="wait">
 									<motion.div
-										className="space-y-2"
-										initial={{ opacity: 0, height: 0 }}
-										animate={{ opacity: 1, height: "auto" }}
-										exit={{ opacity: 0, height: 0 }}
-										transition={{ duration: 0.4, ease: "easeInOut" }}
-										style={{ overflow: "hidden" }}
+										key={mode}
+										initial={{ opacity: 0, y: -10 }}
+										animate={{ opacity: 1, y: 0 }}
+										exit={{ opacity: 0, y: 10 }}
+										transition={{ duration: 0.2 }}
 									>
-										<Label htmlFor="username">Username</Label>
+										<CardTitle className="text-3xl font-bold">
+											{mode === "login" ? "Welcome Back!" : "Create Account"}
+										</CardTitle>
+										<CardDescription>
+											{mode === "login"
+												? "Log in to access Schedulr."
+												: "Sign up to start organizing."}
+										</CardDescription>
+									</motion.div>
+								</AnimatePresence>
+							</CardHeader>
+							<CardContent>
+								<form onSubmit={handleSubmit} className="space-y-6">
+									<AnimatePresence>
+										{mode === "signup" && (
+											<motion.div
+												className="space-y-2"
+												initial={{ opacity: 0, height: 0 }}
+												animate={{ opacity: 1, height: "auto" }}
+												exit={{ opacity: 0, height: 0 }}
+												transition={{ duration: 0.4, ease: "easeInOut" }}
+												style={{ overflow: "hidden" }}
+											>
+												<Label htmlFor="username">Username</Label>
+												<Input
+													id="username"
+													type="text"
+													placeholder="Choose a username"
+													value={username}
+													onChange={(e) => setUsername(e.target.value)}
+													required
+													className="rounded-lg"
+												/>
+											</motion.div>
+										)}
+									</AnimatePresence>
+									<div className="space-y-2">
+										<Label htmlFor="email">Email</Label>
 										<Input
-											id="username"
-											type="text"
-											placeholder="Choose a username"
-											value={username}
-											onChange={(e) => setUsername(e.target.value)}
+											id="email"
+											type="email"
+											placeholder="you@example.com"
+											value={email}
+											onChange={(e) => setEmail(e.target.value)}
 											required
 											className="rounded-lg"
 										/>
-									</motion.div>
-								)}
-							</AnimatePresence>
-							<div className="space-y-2">
-								<Label htmlFor="email">Email</Label>
-								<Input
-									id="email"
-									type="email"
-									placeholder="you@example.com"
-									value={email}
-									onChange={(e) => setEmail(e.target.value)}
-									required
-									className="rounded-lg"
-								/>
-							</div>
-							<div className="space-y-2">
-								<Label htmlFor="password">Password</Label>
-								<Input
-									id="password"
-									type="password"
-									placeholder="••••••••"
-									value={password}
-									onChange={(e) => setPassword(e.target.value)}
-									required
-									className="rounded-lg"
-								/>
-							</div>
-							{error && <p className="text-sm text-destructive">{error}</p>}
-							<Button
-								type="submit"
-								className="w-full text-base py-3"
-								disabled={isLoading}
-								rounded="full"
-							>
-								{isLoading
-									? "Processing..."
-									: mode === "login"
-									? "Log In"
-									: "Sign Up"}
-							</Button>
-						</form>
-					</CardContent>
-					<CardFooter className="flex flex-col items-center space-y-2">
-						<p className="text-sm text-muted-foreground">
-							{mode === "login"
-								? "Don't have an account?"
-								: "Already have an account?"}
-							<Button
-								variant="link"
-								onClick={toggleMode}
-								className="font-semibold"
-							>
-								{mode === "login" ? "Sign Up" : "Log In"}
-							</Button>
-						</p>
-						<Button
-							variant="link"
-							asChild
-							className="text-sm text-muted-foreground"
-						>
-							<Link to="/">Back to Welcome</Link>
-						</Button>
-					</CardFooter>
+									</div>
+									<div className="space-y-2">
+										<Label htmlFor="password">Password</Label>
+										<Input
+											id="password"
+											type="password"
+											placeholder="••••••••"
+											value={password}
+											onChange={(e) => setPassword(e.target.value)}
+											required
+											className="rounded-lg"
+										/>
+									</div>
+									{error && <p className="text-sm text-destructive">{error}</p>}
+									<Button
+										type="submit"
+										className="w-full text-base py-3"
+										disabled={isLoading}
+										rounded="full"
+									>
+										{isLoading
+											? "Processing..."
+											: mode === "login"
+											? "Log In"
+											: "Sign Up"}
+									</Button>
+								</form>
+							</CardContent>
+							<CardFooter className="flex flex-col items-center space-y-2">
+								<p className="text-sm text-muted-foreground">
+									{mode === "login"
+										? "Don't have an account?"
+										: "Already have an account?"}
+									<Button
+										variant="link"
+										onClick={toggleMode}
+										className="font-semibold"
+									>
+										{mode === "login" ? "Sign Up" : "Log In"}
+									</Button>
+								</p>
+								<Button
+									variant="link"
+									asChild
+									className="text-sm text-muted-foreground"
+								>
+									<Link to="/">Back to Welcome</Link>
+								</Button>
+							</CardFooter>
+						</>
+					)}
 				</Card>
 			</motion.div>
 		</div>
