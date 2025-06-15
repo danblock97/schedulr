@@ -1,17 +1,20 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import {
-	ArrowLeft,
-	Save,
-	Trash2,
-	Share2,
-	Loader2,
-	Check,
-	AlertCircle,
-} from "lucide-react";
+import { ArrowLeft, Trash2, Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatDistanceToNow } from "date-fns";
+import {
+	AlertDialog,
+	AlertDialogTrigger,
+	AlertDialogContent,
+	AlertDialogHeader,
+	AlertDialogFooter,
+	AlertDialogTitle,
+	AlertDialogDescription,
+	AlertDialogCancel,
+	AlertDialogAction,
+} from "@/components/ui/alert-dialog";
 
 interface EditorHeaderProps {
 	title: string;
@@ -103,22 +106,31 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
 					</p>
 				</div>
 				<div className="flex items-center gap-2">
-					<Button
-						variant="outline"
-						size="sm"
-						onClick={() => alert("Share functionality coming soon!")}
-						title="Share (Soon)"
-					>
-						<Share2 className="h-4 w-4" />
-					</Button>
-					<Button
-						variant="destructive"
-						size="sm"
-						onClick={handleDelete}
-						title="Move to Trash"
-					>
-						<Trash2 className="h-4 w-4" />
-					</Button>
+					<AlertDialog>
+						<AlertDialogTrigger asChild>
+							<Button variant="destructive" size="sm" title="Move to Trash">
+								<Trash2 className="h-4 w-4" />
+							</Button>
+						</AlertDialogTrigger>
+						<AlertDialogContent>
+							<AlertDialogHeader>
+								<AlertDialogTitle>Delete page</AlertDialogTitle>
+								<AlertDialogDescription>
+									Are you sure you want to move this page to Trash? You can
+									restore it from Trash later.
+								</AlertDialogDescription>
+							</AlertDialogHeader>
+							<AlertDialogFooter>
+								<AlertDialogCancel>Cancel</AlertDialogCancel>
+								<AlertDialogAction
+									className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+									onClick={handleDelete}
+								>
+									Delete
+								</AlertDialogAction>
+							</AlertDialogFooter>
+						</AlertDialogContent>
+					</AlertDialog>
 				</div>
 			</div>
 		</header>

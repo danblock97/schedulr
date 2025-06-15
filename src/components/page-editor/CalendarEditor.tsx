@@ -126,13 +126,7 @@ const CalendarEditor: React.FC<CalendarEditorProps> = ({
 	}, [title, pageData.title]);
 
 	const handleDelete = async () => {
-		if (
-			!window.confirm(
-				`Are you sure you want to move "${pageData.title}" to the trash?`
-			)
-		) {
-			return;
-		}
+		// Confirmation is handled by AlertDialog in the header.
 		const { error } = await supabase
 			.from("pages")
 			.update({ trashed_at: new Date().toISOString() })

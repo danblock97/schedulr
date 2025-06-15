@@ -31,11 +31,24 @@ const AuthPage = () => {
 	const [showConfirmationMessage, setShowConfirmationMessage] = useState(false);
 
 	useEffect(() => {
-		// ... keep existing code (useEffect for mode)
-	}, [searchParams, setSearchParams]);
+		const urlMode = searchParams.get("mode");
+		if (urlMode === "signup" && mode !== "signup") {
+			setMode("signup");
+		} else if (urlMode === "login" && mode !== "login") {
+			setMode("login");
+		}
+	}, [searchParams, setSearchParams, mode]);
 
 	useEffect(() => {
-		// ... keep existing code (useEffect for session check)
+		const checkExistingSession = async () => {
+			const {
+				data: { session },
+			} = await supabase.auth.getSession();
+			if (session) {
+				navigate("/workspace", { replace: true });
+			}
+		};
+		checkExistingSession();
 	}, [navigate]);
 
 	const toggleMode = () => {
@@ -95,7 +108,25 @@ const AuthPage = () => {
 			}
 		} else {
 			// login mode
-			// ... keep existing code (login logic)
+			const { data, error: signInError } =
+				await supabase.auth.signInWithPassword({
+					email,
+					password,
+				});
+
+			if (signInError) {
+				setError(signInError.message);
+			} else if (data?.user) {
+				toast({
+					title: "Login Successful!",
+					description: `Welcome back, ${data.user.email}!`,
+				});
+				navigate("/workspace");
+			} else {
+				setError(
+					"An unexpected error occurred during login. Please try again."
+				);
+			}
 		}
 
 		setIsLoading(false);

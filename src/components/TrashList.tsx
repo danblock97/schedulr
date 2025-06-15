@@ -13,6 +13,17 @@ import {
 } from "@/components/ui/card";
 import { formatDistanceToNow } from "date-fns";
 import { restorePage, permanentlyDeletePage } from "@/lib/pageActions";
+import {
+	AlertDialog,
+	AlertDialogTrigger,
+	AlertDialogContent,
+	AlertDialogHeader,
+	AlertDialogFooter,
+	AlertDialogTitle,
+	AlertDialogDescription,
+	AlertDialogCancel,
+	AlertDialogAction,
+} from "@/components/ui/alert-dialog";
 
 interface TrashListProps {
 	userId: string;
@@ -85,16 +96,10 @@ const TrashList: React.FC<TrashListProps> = ({ userId }) => {
 	};
 
 	const handleDelete = async (pageId: string) => {
-		if (
-			window.confirm(
-				"Are you sure you want to permanently delete this page? This action cannot be undone."
-			)
-		) {
-			const success = await permanentlyDeletePage(pageId);
-			if (success) {
-				// Optimistically update UI
-				setPages(pages.filter((p) => p.id !== pageId));
-			}
+		const success = await permanentlyDeletePage(pageId);
+		if (success) {
+			// Optimistically update UI
+			setPages(pages.filter((p) => p.id !== pageId));
 		}
 	};
 
@@ -158,13 +163,31 @@ const TrashList: React.FC<TrashListProps> = ({ userId }) => {
 						>
 							<ArchiveRestore className="mr-2 h-4 w-4" /> Restore
 						</Button>
-						<Button
-							variant="destructive"
-							size="sm"
-							onClick={() => handleDelete(page.id)}
-						>
-							<Trash2 className="mr-2 h-4 w-4" /> Delete
-						</Button>
+						<AlertDialog>
+							<AlertDialogTrigger asChild>
+								<Button variant="destructive" size="sm">
+									<Trash2 className="mr-2 h-4 w-4" /> Delete
+								</Button>
+							</AlertDialogTrigger>
+							<AlertDialogContent>
+								<AlertDialogHeader>
+									<AlertDialogTitle>Delete page</AlertDialogTitle>
+									<AlertDialogDescription>
+										Are you sure you want to permanently delete this page? This
+										action cannot be undone.
+									</AlertDialogDescription>
+								</AlertDialogHeader>
+								<AlertDialogFooter>
+									<AlertDialogCancel>Cancel</AlertDialogCancel>
+									<AlertDialogAction
+										className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+										onClick={() => handleDelete(page.id)}
+									>
+										Delete
+									</AlertDialogAction>
+								</AlertDialogFooter>
+							</AlertDialogContent>
+						</AlertDialog>
 					</CardFooter>
 				</Card>
 			))}

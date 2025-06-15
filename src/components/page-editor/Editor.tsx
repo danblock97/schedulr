@@ -147,13 +147,7 @@ const Editor: React.FC<EditorProps> = ({ pageData, onPageUpdate }) => {
 	}, [title, content, pageData]);
 
 	const handleDelete = async () => {
-		if (
-			!window.confirm(
-				`Are you sure you want to move "${pageData.title}" to the trash?`
-			)
-		) {
-			return;
-		}
+		// Confirmation is handled by UI AlertDialog.
 		const { error } = await supabase
 			.from("pages")
 			.update({ trashed_at: new Date().toISOString() })
