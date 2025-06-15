@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -7,7 +6,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import type { User } from "@supabase/supabase-js";
 import ChangePasswordDialog from "./ChangePasswordDialog";
-import DeleteAccountDialog from "./DeleteAccountDialog";
 
 interface AccountSettingsProps {
 	currentUser: { username: string; email: string; avatar_url: string | null };
@@ -19,14 +17,11 @@ const AccountSettings: React.FC<AccountSettingsProps> = ({
 	user,
 }) => {
 	const { toast } = useToast();
-	const navigate = useNavigate();
 	const [username, setUsername] = useState(currentUser.username);
 	const [avatarUrl, setAvatarUrl] = useState(currentUser.avatar_url);
 	const [isUploading, setIsUploading] = useState(false);
 	const [isSavingName, setIsSavingName] = useState(false);
 	const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
-	const [isDeleteAccountOpen, setIsDeleteAccountOpen] = useState(false);
-	const [isDeleting, setIsDeleting] = useState(false);
 	const fileInputRef = useRef<HTMLInputElement>(null);
 
 	useEffect(() => {
@@ -148,31 +143,6 @@ const AccountSettings: React.FC<AccountSettingsProps> = ({
 		setIsSavingName(false);
 	};
 
-	const handleDeleteAccount = async () => {
-		if (!user) return;
-
-		setIsDeleting(true);
-
-		const { error } = await supabase.rpc("delete_user_account");
-
-		if (error) {
-			toast({
-				title: "Error deleting account",
-				description: error.message,
-				variant: "destructive",
-			});
-			setIsDeleting(false);
-			setIsDeleteAccountOpen(false);
-		} else {
-			toast({
-				title: "Account deleted successfully",
-				description: "You have been signed out.",
-			});
-			await supabase.auth.signOut();
-			navigate("/");
-		}
-	};
-
 	return (
 		<div>
 			<h2 className="text-2xl font-bold mb-6">My Profile</h2>
@@ -251,25 +221,19 @@ const AccountSettings: React.FC<AccountSettingsProps> = ({
 					</div>
 				</div>
 
-				<div className="border-t pt-8">
-					<Button
-						variant="destructive"
-						onClick={() => setIsDeleteAccountOpen(true)}
-					>
-						Delete my account
-					</Button>
+				<div className="border-t pt-8 space-y-2">
+					<h3 className="text-lg font-semibold">Delete account</h3>
+					<p className="text-sm text-muted-foreground">
+						To delete your account, please contact us via the Contact section
+						and include <span className="font-medium">"delete account"</span> in
+						the subject line.
+					</p>
 				</div>
 			</div>
 			<ChangePasswordDialog
 				open={isChangePasswordOpen}
 				onOpenChange={setIsChangePasswordOpen}
 				userEmail={user?.email}
-			/>
-			<DeleteAccountDialog
-				open={isDeleteAccountOpen}
-				onOpenChange={setIsDeleteAccountOpen}
-				onConfirm={handleDeleteAccount}
-				isDeleting={isDeleting}
 			/>
 		</div>
 	);
