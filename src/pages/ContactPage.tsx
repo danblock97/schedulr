@@ -20,11 +20,6 @@ const ContactPage = () => {
 	const [isSending, setIsSending] = useState(false);
 	const [isSent, setIsSent] = useState(false);
 
-	// IMPORTANT: Replace with your EmailJS public key from your EmailJS account settings.
-	const EMAILJS_PUBLIC_KEY = "0ZRDXEAWbxZ7BsOU8";
-	const EMAILJS_SERVICE_ID = "service_odzoxnu";
-	const EMAILJS_TEMPLATE_ID = "template_ixflbsm";
-
 	const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
 
@@ -34,10 +29,10 @@ const ContactPage = () => {
 
 		emailjs
 			.sendForm(
-				EMAILJS_SERVICE_ID,
-				EMAILJS_TEMPLATE_ID,
+				import.meta.env.VITE_EMAILJS_SERVICE_ID,
+				import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
 				form.current,
-				EMAILJS_PUBLIC_KEY
+				import.meta.env.VITE_EMAILJS_PUBLIC_KEY
 			)
 			.then(
 				(result) => {
