@@ -42,6 +42,7 @@ import TemplateSelectionDialog, {
 	PageType,
 	SimpleJson,
 } from "./dialogs/TemplateSelectionDialog";
+import Logo from "@/components/Logo";
 
 const AppSidebar = () => {
 	const navigate = useNavigate();
@@ -109,7 +110,7 @@ const AppSidebar = () => {
 						asChild
 					>
 						<Link to="/" className="flex items-center gap-2">
-							<img src="/favicon.ico" alt="Schedulr Logo" className="h-6 w-6" />
+							<Logo className="h-6 w-6" />
 							<span className="font-semibold text-lg group-data-[collapsible=icon]:hidden">
 								Schedulr
 							</span>

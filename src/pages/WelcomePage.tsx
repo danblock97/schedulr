@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Link, useOutletContext } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Zap, Edit3, Laptop, LogOut, Sun, Moon } from "lucide-react";
+import { Zap, Edit3, Laptop } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import Particles from "@/components/Particles";
 import RotatingText from "@/components/RotatingText";
 import Orb from "@/components/Orb";
+import Logo from "@/components/Logo";
 
 const WelcomePage = () => {
 	const { user: currentUser } = useOutletContext<{ user: User | null }>();
@@ -93,11 +94,7 @@ const WelcomePage = () => {
 										forceHoverState={false}
 									/>
 								</div>
-								<img
-									src="/favicon.ico"
-									alt="Schedulr Logo"
-									className="absolute inset-0 m-auto w-48 h-48 object-contain z-10"
-								/>
+								<Logo className="absolute inset-0 m-auto w-48 h-48 object-contain z-10" />
 							</div>
 						</div>
 					</div>
@@ -150,7 +147,10 @@ const WelcomePage = () => {
 								Privacy Policy
 							</Link>
 						</div>
-						© {new Date().getFullYear()} Schedulr. Built with Lovable.
+						© {new Date().getFullYear()} Schedulr. Built with ❤️ by{" "}
+						<a href="https://danblock.dev" className="text-primary">
+							danblock.dev
+						</a>
 					</div>
 				</footer>
 			</div>

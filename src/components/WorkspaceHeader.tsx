@@ -17,7 +17,7 @@ import {
 	NavigationMenuList,
 	navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
-import { Search, Sun, Moon, Settings, LogOut, Briefcase } from "lucide-react";
+import { Search, Sun, Moon, Settings, LogOut } from "lucide-react";
 import NotificationsBell from "@/components/notifications/NotificationsBell";
 import { supabase } from "@/integrations/supabase/client";
 import { Link, useNavigate } from "react-router-dom";
@@ -27,6 +27,7 @@ import type { Tables } from "@/integrations/supabase/types";
 import PageIcon from "@/components/dashboard/PageIcon";
 import { Skeleton } from "@/components/ui/skeleton";
 import { applyTheme } from "@/lib/theme";
+import Logo from "@/components/Logo";
 
 interface WorkspaceHeaderProps {
 	currentUser: User | null;
@@ -188,11 +189,11 @@ const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
 								alt={workspaceInfo.name || "Workspace"}
 							/>
 							<AvatarFallback>
-								<Briefcase className="h-4 w-4" />
+								<Logo className="h-4 w-4" />
 							</AvatarFallback>
 						</Avatar>
 					) : (
-						<Briefcase className="h-5 w-5" />
+						<Logo className="h-5 w-5" />
 					)}
 					<span className="hidden sm:inline-block truncate">
 						{workspaceInfo?.name || "Schedulr"}
@@ -207,6 +208,11 @@ const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
 								</Link>
 							</NavigationMenuItem>
 						)}
+						<NavigationMenuItem>
+							<Link to="/" className={navigationMenuTriggerStyle()}>
+								Home
+							</Link>
+						</NavigationMenuItem>
 						<NavigationMenuItem>
 							<Link to="/pricing" className={navigationMenuTriggerStyle()}>
 								Pricing

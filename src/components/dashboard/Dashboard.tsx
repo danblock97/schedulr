@@ -5,6 +5,7 @@ import WorkspaceSearch from "./WorkspaceSearch";
 import UpcomingEvents from "./UpcomingEvents";
 import MyTasks from "./MyTasks";
 import { motion } from "framer-motion";
+import Logo from "@/components/Logo";
 
 interface DashboardProps {
 	user: User;
@@ -40,7 +41,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
 			animate="visible"
 		>
 			<motion.div className="flex items-center gap-3" variants={itemVariants}>
-				<img src="/favicon.ico" alt="Schedulr Logo" className="h-8 w-8" />
+				<Logo className="h-8 w-8" />
 				<h1 className="text-3xl font-bold">Good afternoon, {username}</h1>
 			</motion.div>
 			<motion.div variants={itemVariants}>
