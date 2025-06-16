@@ -4,6 +4,12 @@
 	"version": "1.0.1",
 	"type": "module",
 	"main": "electron/main.cjs",
+	"description": "Schedulr – connected workspace and desktop app",
+	"author": "Dan Block <dan@block.dev>",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/danblock97/schedulr.git"
+	},
 	"scripts": {
 		"dev:web": "vite",
 		"dev": "concurrently -k \"vite\" \"wait-on http://localhost:8080 && electron .\"",
@@ -126,6 +132,10 @@
 					"schedulr"
 				]
 			}
-		]
+		],
+		"artifactName": "scheduler-${version}.${ext}",
+		"win": {
+			"icon": "public/images/logo.ico"
+		}
 	}
 }
