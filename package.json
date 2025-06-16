@@ -14,7 +14,7 @@
 		"dev:web": "vite",
 		"dev": "concurrently -k \"vite\" \"wait-on http://localhost:8080 && electron .\"",
 		"build:web": "vite build",
-		"build": "npm run build:web && electron-builder",
+		"build": "npm run build:web && electron-builder --publish always",
 		"build:dev": "vite build --mode development",
 		"lint": "eslint .",
 		"preview": "vite preview"
