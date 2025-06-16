@@ -24,8 +24,8 @@ const Logo: React.FC<LogoProps> = ({ className, alt = "Schedulr Logo" }) => {
 	}, []);
 
 	const logoSrc = isDarkMode
-		? "/images/logo-light.png"
-		: "/images/logo-dark.png";
+		? `${import.meta.env.BASE_URL}images/logo-light.png`
+		: `${import.meta.env.BASE_URL}images/logo-dark.png`;
 
 	return (
 		<img src={logoSrc} alt={alt} className={cn("select-none", className)} />
