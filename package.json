@@ -135,7 +135,7 @@
 		],
 		"artifactName": "scheduler-${version}.${ext}",
 		"win": {
-			"icon": "public/images/logo.ico"
+			"icon": "public/images/desktop-logo.png"
 		}
 	}
 }
