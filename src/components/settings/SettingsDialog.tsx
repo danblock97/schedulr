@@ -12,6 +12,7 @@ import NotificationsSettings from "./sections/NotificationsSettings";
 import PreferencesSettings from "./sections/PreferencesSettings";
 import ConnectionsSettings from "./sections/ConnectionsSettings";
 import GeneralSettings from "./sections/GeneralSettings";
+import AppVersionSettings from "./sections/AppVersionSettings";
 import type { User } from "@supabase/supabase-js";
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -28,7 +29,8 @@ type ActiveView =
 	| "notifications"
 	| "connections"
 	| "general"
-	| "desktop-app";
+	| "desktop-app"
+	| "app-version";
 
 const SettingsDialog: React.FC<SettingsDialogProps> = ({
 	open,
@@ -80,6 +82,8 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
 						</div>
 					</div>
 				);
+			case "app-version":
+				return <AppVersionSettings />;
 			default:
 				return <AccountSettings currentUser={currentUser} user={user} />;
 		}
@@ -98,6 +102,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
 						<NotificationsSettings profile={profile} userId={user?.id} />
 						<ConnectionsSettings />
 						<GeneralSettings profile={profile} userId={user?.id} />
+						<AppVersionSettings />
 					</div>
 				</DialogContent>
 			</Dialog>
