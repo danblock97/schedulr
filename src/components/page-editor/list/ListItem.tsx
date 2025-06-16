@@ -80,11 +80,11 @@ const ListItem: React.FC<ListItemProps> = ({ item, onUpdate, onDelete }) => {
 					className="transition-all"
 				/>
 			</TableCell>
-			<TableCell className="pr-2">
+			<TableCell className="pr-2 min-w-[14rem]">
 				<Input
 					value={item.text}
 					onChange={(e) => onUpdate(item.id, { text: e.target.value })}
-					className={`h-auto bg-transparent border-none focus:ring-0 p-0 transition-all duration-300 placeholder:text-muted-foreground/60 ${
+					className={`w-full min-w-0 h-auto bg-transparent border-none focus:ring-0 p-0 transition-all duration-300 placeholder:text-muted-foreground/60 ${
 						item.completed
 							? "line-through text-muted-foreground"
 							: "text-foreground"
@@ -92,7 +92,7 @@ const ListItem: React.FC<ListItemProps> = ({ item, onUpdate, onDelete }) => {
 					placeholder="What's on your mind?"
 				/>
 			</TableCell>
-			<TableCell className="w-40 px-2">
+			<TableCell className="w-40 px-2 min-w-[8rem]">
 				<Select
 					value={item.priority || "none"}
 					onValueChange={(value: Priority) =>
@@ -117,7 +117,7 @@ const ListItem: React.FC<ListItemProps> = ({ item, onUpdate, onDelete }) => {
 					</SelectContent>
 				</Select>
 			</TableCell>
-			<TableCell className="w-48 px-2">
+			<TableCell className="w-48 px-2 min-w-[9rem]">
 				<Popover>
 					<PopoverTrigger asChild>
 						<Button

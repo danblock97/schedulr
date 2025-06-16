@@ -1,11 +1,18 @@
 import React, { useState } from "react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import {
+	Dialog,
+	DialogContent,
+	DialogHeader,
+	DialogTitle,
+} from "@/components/ui/dialog";
+import { useIsMobile } from "@/hooks/use-mobile";
 import SettingsSidebar from "./SettingsSidebar";
 import AccountSettings from "./sections/AccountSettings";
 import NotificationsSettings from "./sections/NotificationsSettings";
 import PreferencesSettings from "./sections/PreferencesSettings";
 import ConnectionsSettings from "./sections/ConnectionsSettings";
 import GeneralSettings from "./sections/GeneralSettings";
+import AppVersionSettings from "./sections/AppVersionSettings";
 import type { User } from "@supabase/supabase-js";
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -22,7 +29,8 @@ type ActiveView =
 	| "notifications"
 	| "connections"
 	| "general"
-	| "desktop-app";
+	| "desktop-app"
+	| "app-version";
 
 const SettingsDialog: React.FC<SettingsDialogProps> = ({
 	open,
@@ -31,6 +39,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
 	profile,
 }) => {
 	const [activeView, setActiveView] = useState<ActiveView>("account");
+	const isMobile = useIsMobile();
 
 	const currentUser = {
 		username:
@@ -73,14 +82,39 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
 						</div>
 					</div>
 				);
+			case "app-version":
+				return <AppVersionSettings />;
 			default:
 				return <AccountSettings currentUser={currentUser} user={user} />;
 		}
 	};
 
+	if (isMobile) {
+		return (
+			<Dialog open={open} onOpenChange={onOpenChange}>
+				<DialogContent className="max-w-md w-full max-h-[90vh] overflow-y-auto">
+					<DialogHeader className="sr-only">
+						<DialogTitle className="sr-only">Settings</DialogTitle>
+					</DialogHeader>
+					<div className="space-y-8">
+						<AccountSettings currentUser={currentUser} user={user} />
+						<PreferencesSettings profile={profile} userId={user?.id} />
+						<NotificationsSettings profile={profile} userId={user?.id} />
+						<ConnectionsSettings />
+						<GeneralSettings profile={profile} userId={user?.id} />
+						<AppVersionSettings />
+					</div>
+				</DialogContent>
+			</Dialog>
+		);
+	}
+
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent className="max-w-4xl w-full h-[80vh] p-0 gap-0 overflow-hidden">
+				<DialogHeader className="sr-only">
+					<DialogTitle className="sr-only">Settings</DialogTitle>
+				</DialogHeader>
 				<div className="flex h-full">
 					<SettingsSidebar
 						activeView={activeView}

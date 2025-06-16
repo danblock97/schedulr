@@ -8,6 +8,7 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import { Github, Slack } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const GoogleIcon = ({ className }: { className?: string }) => (
 	<svg
@@ -44,6 +45,19 @@ const connections = [
 ];
 
 const ConnectionsSettings = () => {
+	const isMobile = useIsMobile();
+
+	if (isMobile) {
+		return (
+			<div className="space-y-4">
+				<h2 className="text-xl font-bold">Connections</h2>
+				<p className="text-sm text-muted-foreground">
+					Integrations with your favorite tools are coming soon.
+				</p>
+			</div>
+		);
+	}
+
 	return (
 		<div className="h-full flex flex-col">
 			<h2 className="text-2xl font-bold mb-6">Connections</h2>

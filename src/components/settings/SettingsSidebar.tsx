@@ -16,7 +16,8 @@ type ActiveView =
 	| "notifications"
 	| "connections"
 	| "general"
-	| "desktop-app";
+	| "desktop-app"
+	| "app-version";
 
 interface SettingsSidebarProps {
 	activeView: ActiveView;
@@ -44,6 +45,7 @@ const SettingsSidebar: React.FC<SettingsSidebarProps> = ({
 			items: [
 				{ id: "general", label: "General", icon: Settings },
 				{ id: "desktop-app", label: "Desktop App", icon: Monitor },
+				{ id: "app-version", label: "App Version", icon: Monitor },
 			],
 		},
 	];

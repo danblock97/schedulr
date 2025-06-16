@@ -43,6 +43,7 @@ import TemplateSelectionDialog, {
 	SimpleJson,
 } from "./dialogs/TemplateSelectionDialog";
 import Logo from "@/components/Logo";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const AppSidebar = () => {
 	const navigate = useNavigate();
@@ -51,6 +52,8 @@ const AppSidebar = () => {
 		isOpen: boolean;
 		pageType: PageType | null;
 	}>({ isOpen: false, pageType: null });
+
+	const isMobile = useIsMobile();
 
 	const handleCreatePageFromTemplate = async (
 		title: string,
@@ -131,9 +134,9 @@ const AppSidebar = () => {
 									</SidebarMenuButton>
 								</DropdownMenuTrigger>
 								<DropdownMenuContent
-									side="right"
-									align="start"
-									className="w-56"
+									side={isMobile ? "bottom" : "right"}
+									align={isMobile ? "center" : "start"}
+									className={`w-full sm:w-56 ${isMobile ? "max-w-[90vw]" : ""}`}
 								>
 									<DropdownMenuLabel>Create new</DropdownMenuLabel>
 									<DropdownMenuSeparator />

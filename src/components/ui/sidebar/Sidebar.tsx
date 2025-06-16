@@ -1,6 +1,11 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
+import {
+	Sheet,
+	SheetContent,
+	SheetHeader,
+	SheetTitle,
+} from "@/components/ui/sheet";
 import { useSidebar } from "./context";
 import { SIDEBAR_WIDTH_MOBILE } from "./context";
 
@@ -54,6 +59,9 @@ export const Sidebar = React.forwardRef<
 						}
 						side={side}
 					>
+						<SheetHeader>
+							<SheetTitle className="sr-only">Sidebar</SheetTitle>
+						</SheetHeader>
 						<div className="flex h-full w-full flex-col">{children}</div>
 					</SheetContent>
 				</Sheet>

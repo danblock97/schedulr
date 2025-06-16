@@ -69,9 +69,9 @@ const EditorHeader: React.FC<EditorHeaderProps> = ({
 		<header className="p-4 border-b bg-background sticky top-0 z-10">
 			<div className="container mx-auto flex items-center justify-between gap-4">
 				<Button variant="outline" size="sm" asChild>
-					<Link to="/workspace">
-						<ArrowLeft className="mr-2 h-4 w-4" />
-						Back to Pages
+					<Link to="/workspace" className="flex items-center">
+						<ArrowLeft className="h-4 w-4" />
+						<span className="ml-2 hidden sm:inline">Back to Pages</span>
 					</Link>
 				</Button>
 				<div className="flex-1 min-w-0">
