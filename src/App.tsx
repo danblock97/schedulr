@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, HashRouter, Routes, Route } from "react-router-dom";
 import WelcomePage from "./pages/WelcomePage";
 import AuthPage from "./pages/AuthPage";
 import WorkspacePage from "./pages/WorkspacePage";
@@ -96,32 +96,39 @@ const App = () => {
 			<TooltipProvider>
 				<Toaster />
 				<Sonner />
-				<BrowserRouter>
-					<Routes>
-						<Route element={<PageLayout />}>
-							<Route path="/" element={<WelcomePage />} />
-							<Route path="/pricing" element={<PricingPage />} />
-							<Route path="/contact" element={<ContactPage />} />
-							<Route path="/terms" element={<TermsOfServicePage />} />
-							<Route path="/privacy" element={<PrivacyPolicyPage />} />
-						</Route>
+				{(() => {
+					const Router = (window as any).electron?.isElectron
+						? HashRouter
+						: BrowserRouter;
+					return (
+						<Router>
+							<Routes>
+								<Route element={<PageLayout />}>
+									<Route path="/" element={<WelcomePage />} />
+									<Route path="/pricing" element={<PricingPage />} />
+									<Route path="/contact" element={<ContactPage />} />
+									<Route path="/terms" element={<TermsOfServicePage />} />
+									<Route path="/privacy" element={<PrivacyPolicyPage />} />
+								</Route>
 
-						<Route path="/auth" element={<AuthPage />} />
+								<Route path="/auth" element={<AuthPage />} />
 
-						<Route element={<ProtectedRoute />}>
-							<Route element={<WorkspaceLayout />}>
-								<Route path="/workspace" element={<WorkspacePage />} />
-								<Route
-									path="/workspace/page/:pageId"
-									element={<PageEditorPage />}
-								/>
-								<Route path="/settings" element={<SettingsPage />} />
-							</Route>
-						</Route>
-						{/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-						<Route path="*" element={<NotFound />} />
-					</Routes>
-				</BrowserRouter>
+								<Route element={<ProtectedRoute />}>
+									<Route element={<WorkspaceLayout />}>
+										<Route path="/workspace" element={<WorkspacePage />} />
+										<Route
+											path="/workspace/page/:pageId"
+											element={<PageEditorPage />}
+										/>
+										<Route path="/settings" element={<SettingsPage />} />
+									</Route>
+								</Route>
+								{/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+								<Route path="*" element={<NotFound />} />
+							</Routes>
+						</Router>
+					);
+				})()}
 			</TooltipProvider>
 		</QueryClientProvider>
 	);
