@@ -25,4 +25,5 @@ export default defineConfig(({ mode }) => ({
 			).version
 		),
 	},
+	base: mode === "development" ? "/" : "./",
 }));

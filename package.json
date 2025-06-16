@@ -112,7 +112,8 @@
 		"productName": "Schedulr",
 		"files": [
 			"dist/**/*",
-			"electron/**/*"
+			"electron/**/*",
+			"public/**/*"
 		],
 		"extraResources": [
 			{
@@ -135,7 +136,7 @@
 		],
 		"artifactName": "scheduler-${version}.${ext}",
 		"win": {
-			"icon": "public/images/desktop-logo.png"
+			"icon": "public/images/logo-light.png"
 		}
 	}
 }
