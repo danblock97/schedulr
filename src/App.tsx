@@ -19,10 +19,14 @@ import TermsOfServicePage from "./pages/TermsOfServicePage";
 import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 import { supabase } from "./integrations/supabase/client";
 import { applyTheme, type Theme } from "./lib/theme";
+import useIpcSupabase from "@/hooks/useIpcSupabase";
+import useDesktopDeepLink from "@/hooks/useDesktopDeepLink";
 
 const queryClient = new QueryClient();
 
 const App = () => {
+	useIpcSupabase();
+	useDesktopDeepLink();
 	useEffect(() => {
 		const fetchAndApplyTheme = async () => {
 			const {

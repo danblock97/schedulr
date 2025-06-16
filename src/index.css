@@ -101,3 +101,8 @@
 		flex-direction: column;
 	}
 }
+
+/* Electron no-drag helper */
+.no-drag {
+	-webkit-app-region: no-drag;
+}

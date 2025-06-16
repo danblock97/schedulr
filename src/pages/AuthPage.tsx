@@ -30,6 +30,8 @@ const AuthPage = () => {
 	const [isLoading, setIsLoading] = useState(false);
 	const [showConfirmationMessage, setShowConfirmationMessage] = useState(false);
 
+	const isDesktopSource = searchParams.get("source") === "desktop";
+
 	useEffect(() => {
 		const urlMode = searchParams.get("mode");
 		if (urlMode === "signup" && mode !== "signup") {
@@ -40,15 +42,27 @@ const AuthPage = () => {
 	}, [searchParams, setSearchParams, mode]);
 
 	useEffect(() => {
-		const checkExistingSession = async () => {
+		if (isDesktopSource) {
+			localStorage.setItem("schedulr_desktop_signup", "1");
+		}
+	}, []);
+
+	useEffect(() => {
+		const checkSession = async () => {
 			const {
 				data: { session },
 			} = await supabase.auth.getSession();
 			if (session) {
-				navigate("/workspace", { replace: true });
+				if (localStorage.getItem("schedulr_desktop_signup") === "1") {
+					localStorage.removeItem("schedulr_desktop_signup");
+					const u = `schedulr://auth?access_token=${session.access_token}&refresh_token=${session.refresh_token}`;
+					window.location.href = u;
+				} else {
+					navigate("/workspace", { replace: true });
+				}
 			}
 		};
-		checkExistingSession();
+		checkSession();
 	}, [navigate]);
 
 	const toggleMode = () => {
@@ -79,7 +93,9 @@ const AuthPage = () => {
 				options: {
 					data: { username: username.trim() },
 					// emailRedirectTo is critical for email confirmation flow
-					emailRedirectTo: `${window.location.origin}/`,
+					emailRedirectTo: isDesktopSource
+						? `${window.location.origin}/?source=desktop`
+						: `${window.location.origin}/`,
 				},
 			});
 

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Schedulr – Installer</title>
+		<link rel="icon" href="../public/images/logo-light.png" />
+		<script src="https://cdn.tailwindcss.com"></script>
+		<script src="https://cdn.jsdelivr.net/npm/tsparticles@3/tsparticles.bundle.min.js"></script>
+		<style>
+			html,
+			body {
+				width: 100%;
+				height: 100%;
+				margin: 0;
+				padding: 0;
+				background: #00000000;
+			}
+			/* Rounded window illusion */
+			#card {
+				border-radius: 48px;
+				overflow: hidden;
+			}
+		</style>
+	</head>
+	<body
+		class="flex items-center justify-center h-screen relative overflow-hidden bg-transparent"
+	>
+		<div
+			id="particles"
+			class="absolute inset-0 -z-10 pointer-events-none"
+		></div>
+		<div
+			id="card"
+			class="flex flex-col items-center justify-center text-center space-y-6 bg-black/90 p-10 rounded-4xl shadow-lg backdrop-blur-sm"
+			style="width: 100%; height: 100%; max-width: 750px; max-height: 900px"
+		>
+			<div
+				id="inner"
+				class="flex flex-col items-center justify-center space-y-6 h-full"
+			>
+				<img src="../public/images/logo-light.png" class="w-24 h-24 mx-auto" />
+				<h1 class="text-2xl font-semibold text-white">Schedulr</h1>
+				<p id="status" class="text-muted text-gray-300">
+					Checking for updates...
+				</p>
+			</div>
+		</div>
+		<script>
+			window.addEventListener("DOMContentLoaded", () => {
+				const statusEl = document.getElementById("status");
+				let baseText = "Checking for updates";
+				let dotCount = 0;
+				const dotTimer = setInterval(() => {
+					statusEl.textContent = baseText + ".".repeat(dotCount % 4);
+					dotCount++;
+				}, 500);
+
+				window.electron?.onUpdateStatus(function (status) {
+					const map = {
+						checking: "Checking for updates",
+						"update-available": "Downloading update",
+						downloading: "Installing update",
+						"update-downloaded": "Installing update",
+						"up-to-date": "Launching",
+						error: "Error – launching",
+					};
+					baseText = map[status] || status;
+					dotCount = 0;
+				});
+
+				(tsParticles || window.tsParticles).load("particles", {
+					fpsLimit: 60,
+					background: { color: "#00000000" },
+					particles: {
+						number: { value: 140, density: { enable: true, area: 800 } },
+						color: { value: ["#ffffff", "#888888"] },
+						opacity: { value: 0.5, random: true },
+						size: { value: { min: 1, max: 4 }, random: true },
+						move: {
+							enable: true,
+							speed: 0.3,
+							direction: "none",
+							outMode: "out",
+						},
+					},
+					interactivity: { events: { resize: true } },
+					fullScreen: { enable: false },
+				});
+			});
+		</script>
+		<script type="module">
+			import {
+				Renderer,
+				Camera,
+				Geometry,
+				Program,
+				Mesh,
+			} from "https://cdn.jsdelivr.net/npm/ogl@0.0.32/dist/ogl.mjs";
+
+			const container = document.getElementById("particles");
+			const renderer = new Renderer({ depth: false, alpha: true });
+			const gl = renderer.gl;
+			container.appendChild(gl.canvas);
+			gl.clearColor(0, 0, 0, 0);
+			const camera = new Camera(gl, { fov: 15 });
+			camera.position.set(0, 0, 20);
+			function resize() {
+				renderer.setSize(container.clientWidth, container.clientHeight);
+				camera.perspective({ aspect: gl.canvas.width / gl.canvas.height });
+			}
+			window.addEventListener("resize", resize);
+			resize();
+			// generate simple point cloud
+			const count = 180;
+			const positions = new Float32Array(count * 3);
+			for (let i = 0; i < count; i++) {
+				positions.set(
+					[
+						(Math.random() * 2 - 1) * 10,
+						(Math.random() * 2 - 1) * 10,
+						(Math.random() * 2 - 1) * 10,
+					],
+					i * 3
+				);
+			}
+			const geometry = new Geometry(gl, {
+				position: { size: 3, data: positions },
+			});
+			const vertex = `attribute vec3 position;uniform mat4 modelMatrix,viewMatrix,projectionMatrix;void main(){gl_PointSize=2.0;gl_Position=projectionMatrix*viewMatrix*modelMatrix*vec4(position,1.0);} `;
+			const fragment = `precision highp float;void main(){float d=length(gl_PointCoord-vec2(0.5));if(d>0.5)discard;gl_FragColor=vec4(1.0,1.0,1.0,0.7);}`;
+			const program = new Program(gl, { vertex, fragment, transparent: true });
+			const mesh = new Mesh(gl, { mode: gl.POINTS, geometry, program });
+			function update(t) {
+				requestAnimationFrame(update);
+				mesh.rotation.y += 0.002;
+				renderer.render({ scene: mesh, camera });
+			}
+			requestAnimationFrame(update);
+		</script>
+	</body>
+</html>

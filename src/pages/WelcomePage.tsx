@@ -7,10 +7,23 @@ import Particles from "@/components/Particles";
 import RotatingText from "@/components/RotatingText";
 import Orb from "@/components/Orb";
 import Logo from "@/components/Logo";
+import useIsElectron from "@/hooks/useIsElectron";
+import {
+	AlertDialog,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+	AlertDialogAction,
+	AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
 
 const WelcomePage = () => {
 	const { user: currentUser } = useOutletContext<{ user: User | null }>();
 	const [isDarkMode, setIsDarkMode] = useState(false);
+	const isElectron = useIsElectron();
+	const [showSignupDialog, setShowSignupDialog] = useState(false);
 
 	useEffect(() => {
 		const checkTheme = () => {
@@ -77,6 +90,14 @@ const WelcomePage = () => {
 							{currentUser ? (
 								<Button size="lg" asChild className="px-8 py-3 text-lg">
 									<Link to="/workspace">Open Workspace</Link>
+								</Button>
+							) : isElectron ? (
+								<Button
+									size="lg"
+									className="px-8 py-3 text-lg"
+									onClick={() => setShowSignupDialog(true)}
+								>
+									Get Schedulr Free
 								</Button>
 							) : (
 								<Button size="lg" asChild className="px-8 py-3 text-lg">
@@ -148,12 +169,47 @@ const WelcomePage = () => {
 							</Link>
 						</div>
 						© {new Date().getFullYear()} Schedulr. Built with ❤️ by{" "}
-						<a href="https://danblock.dev" className="text-primary">
+						<a
+							href="https://danblock.dev"
+							className="text-primary"
+							onClick={(e) => {
+								if (isElectron) {
+									e.preventDefault();
+									window.electron?.openExternal("https://danblock.dev");
+								}
+							}}
+						>
 							danblock.dev
 						</a>
 					</div>
 				</footer>
 			</div>
+
+			{isElectron && (
+				<AlertDialog open={showSignupDialog} onOpenChange={setShowSignupDialog}>
+					<AlertDialogContent>
+						<AlertDialogHeader>
+							<AlertDialogTitle>Continue sign up in browser</AlertDialogTitle>
+							<AlertDialogDescription>
+								For security reasons we need to verify your email in the
+								browser. Continue?
+							</AlertDialogDescription>
+						</AlertDialogHeader>
+						<AlertDialogFooter>
+							<AlertDialogCancel>Cancel</AlertDialogCancel>
+							<AlertDialogAction
+								onClick={() => {
+									window.electron?.openExternal(
+										`${window.location.origin}/auth?mode=signup&source=desktop`
+									);
+								}}
+							>
+								Continue in Browser
+							</AlertDialogAction>
+						</AlertDialogFooter>
+					</AlertDialogContent>
+				</AlertDialog>
+			)}
 		</div>
 	);
 };

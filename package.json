@@ -3,9 +3,12 @@
 	"private": true,
 	"version": "1.0.1",
 	"type": "module",
+	"main": "electron/main.cjs",
 	"scripts": {
-		"dev": "vite",
-		"build": "vite build",
+		"dev:web": "vite",
+		"dev": "concurrently -k \"vite\" \"wait-on http://localhost:8080 && electron .\"",
+		"build:web": "vite build",
+		"build": "npm run build:web && electron-builder",
 		"build:dev": "vite build --mode development",
 		"lint": "eslint .",
 		"preview": "vite preview"
@@ -72,7 +75,9 @@
 		"tailwind-merge": "^2.6.0",
 		"tailwindcss-animate": "^1.0.7",
 		"vaul": "^0.9.3",
-		"zod": "^3.23.8"
+		"zod": "^3.23.8",
+		"electron-updater": "^6.1.7",
+		"electron-is-dev": "^2.0.0"
 	},
 	"devDependencies": {
 		"@eslint/js": "^9.9.0",
@@ -90,6 +95,37 @@
 		"tailwindcss": "^3.4.17",
 		"typescript": "^5.5.3",
 		"typescript-eslint": "^8.0.1",
-		"vite": "^5.4.1"
+		"vite": "^5.4.1",
+		"electron": "^30.0.0",
+		"concurrently": "^8.2.2",
+		"wait-on": "^7.1.1",
+		"electron-builder": "^24.13.1"
+	},
+	"build": {
+		"appId": "com.schedulr.desktop",
+		"productName": "Schedulr",
+		"files": [
+			"dist/**/*",
+			"electron/**/*"
+		],
+		"extraResources": [
+			{
+				"from": "public/images/logo.ico",
+				"to": "logo.ico"
+			}
+		],
+		"publish": [
+			{
+				"provider": "github"
+			}
+		],
+		"protocols": [
+			{
+				"name": "Schedulr Auth",
+				"schemes": [
+					"schedulr"
+				]
+			}
+		]
 	}
 }

@@ -28,6 +28,18 @@ import PageIcon from "@/components/dashboard/PageIcon";
 import { Skeleton } from "@/components/ui/skeleton";
 import { applyTheme } from "@/lib/theme";
 import Logo from "@/components/Logo";
+import WindowControls from "@/components/WindowControls";
+import useIsElectron from "@/hooks/useIsElectron";
+import {
+	AlertDialog,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+	AlertDialogAction,
+	AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
 
 interface WorkspaceHeaderProps {
 	currentUser: User | null;
@@ -55,6 +67,10 @@ const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
 	const [isSearchFocused, setIsSearchFocused] = React.useState(false);
 	const [isSearchLoading, setIsSearchLoading] = React.useState(false);
 	const searchContainerRef = React.useRef<HTMLDivElement>(null);
+
+	const isElectron = useIsElectron();
+
+	const [showSignupDialog, setShowSignupDialog] = React.useState(false);
 
 	const toggleTheme = async () => {
 		const newTheme = document.documentElement.classList.contains("dark")
@@ -170,9 +186,16 @@ const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
 		setIsSearchFocused(false);
 	};
 
+	const headerStyle = isElectron
+		? ({ WebkitAppRegion: "drag" } as React.CSSProperties)
+		: undefined;
+
 	return (
-		<header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-4 md:px-6 justify-between">
-			<div className="flex items-center gap-4">
+		<header
+			className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-4 md:px-6 justify-between"
+			style={headerStyle}
+		>
+			<div className="flex items-center gap-4 no-drag">
 				{withSidebar && (
 					<div className="md:hidden">
 						<SidebarTrigger />
@@ -227,7 +250,7 @@ const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
 				</NavigationMenu>
 			</div>
 
-			<div className="flex items-center gap-2 md:gap-4">
+			<div className="flex items-center gap-2 md:gap-4 no-drag">
 				<div className="relative flex-1 max-w-xs" ref={searchContainerRef}>
 					<Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
 					<Input
@@ -325,12 +348,42 @@ const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
 						<Button asChild variant="ghost">
 							<Link to="/auth?mode=login">Log In</Link>
 						</Button>
-						<Button asChild>
-							<Link to="/auth?mode=signup">Sign Up</Link>
-						</Button>
+						{isElectron ? (
+							<Button onClick={() => setShowSignupDialog(true)}>Sign Up</Button>
+						) : (
+							<Button asChild>
+								<Link to="/auth?mode=signup">Sign Up</Link>
+							</Button>
+						)}
 					</div>
 				)}
+				<WindowControls />
 			</div>
+			{isElectron && (
+				<AlertDialog open={showSignupDialog} onOpenChange={setShowSignupDialog}>
+					<AlertDialogContent>
+						<AlertDialogHeader>
+							<AlertDialogTitle>Continue sign up in browser</AlertDialogTitle>
+							<AlertDialogDescription>
+								Signup requires email verification in your default browser.
+								Continue?
+							</AlertDialogDescription>
+						</AlertDialogHeader>
+						<AlertDialogFooter>
+							<AlertDialogCancel>Cancel</AlertDialogCancel>
+							<AlertDialogAction
+								onClick={() => {
+									window.electron?.openExternal(
+										`${window.location.origin}/auth?mode=signup&source=desktop`
+									);
+								}}
+							>
+								Continue in Browser
+							</AlertDialogAction>
+						</AlertDialogFooter>
+					</AlertDialogContent>
+				</AlertDialog>
+			)}
 		</header>
 	);
 };
