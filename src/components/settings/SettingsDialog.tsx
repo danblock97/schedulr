@@ -1,5 +1,11 @@
 import React, { useState } from "react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import {
+	Dialog,
+	DialogContent,
+	DialogHeader,
+	DialogTitle,
+} from "@/components/ui/dialog";
+import { useIsMobile } from "@/hooks/use-mobile";
 import SettingsSidebar from "./SettingsSidebar";
 import AccountSettings from "./sections/AccountSettings";
 import NotificationsSettings from "./sections/NotificationsSettings";
@@ -31,6 +37,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
 	profile,
 }) => {
 	const [activeView, setActiveView] = useState<ActiveView>("account");
+	const isMobile = useIsMobile();
 
 	const currentUser = {
 		username:
@@ -78,9 +85,31 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
 		}
 	};
 
+	if (isMobile) {
+		return (
+			<Dialog open={open} onOpenChange={onOpenChange}>
+				<DialogContent className="max-w-md w-full max-h-[90vh] overflow-y-auto">
+					<DialogHeader className="sr-only">
+						<DialogTitle className="sr-only">Settings</DialogTitle>
+					</DialogHeader>
+					<div className="space-y-8">
+						<AccountSettings currentUser={currentUser} user={user} />
+						<PreferencesSettings profile={profile} userId={user?.id} />
+						<NotificationsSettings profile={profile} userId={user?.id} />
+						<ConnectionsSettings />
+						<GeneralSettings profile={profile} userId={user?.id} />
+					</div>
+				</DialogContent>
+			</Dialog>
+		);
+	}
+
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent className="max-w-4xl w-full h-[80vh] p-0 gap-0 overflow-hidden">
+				<DialogHeader className="sr-only">
+					<DialogTitle className="sr-only">Settings</DialogTitle>
+				</DialogHeader>
 				<div className="flex h-full">
 					<SettingsSidebar
 						activeView={activeView}

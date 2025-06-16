@@ -25,7 +25,7 @@ const AddColumn: React.FC<AddColumnProps> = ({ onAddColumn }) => {
 			<motion.div
 				initial={{ opacity: 0, y: -10 }}
 				animate={{ opacity: 1, y: 0 }}
-				className="p-2 bg-muted rounded-xl w-[350px] flex-shrink-0"
+				className="p-2 bg-muted rounded-xl w-[90vw] sm:w-[350px] flex-shrink-0"
 			>
 				<Input
 					autoFocus
@@ -60,7 +60,7 @@ const AddColumn: React.FC<AddColumnProps> = ({ onAddColumn }) => {
 	}
 
 	return (
-		<div className="w-[350px] flex-shrink-0">
+		<div className="w-[90vw] sm:w-[350px] flex-shrink-0">
 			<Button
 				variant="ghost"
 				className="w-full justify-start p-3 h-auto text-muted-foreground hover:text-foreground hover:bg-accent rounded-xl"

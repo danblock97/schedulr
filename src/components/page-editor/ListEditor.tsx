@@ -246,7 +246,7 @@ const ListEditor: React.FC<ListEditorProps> = ({ pageData, onPageUpdate }) => {
 			<div className="flex-grow p-4 md:p-8 flex justify-center">
 				<div className="w-full max-w-4xl space-y-4">
 					<div className="flex justify-between items-center">
-						<div className="flex gap-2 items-center">
+						<div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
 							<Filter className="h-4 w-4 text-muted-foreground" />
 							<Select
 								value={filters.priority}
@@ -254,7 +254,7 @@ const ListEditor: React.FC<ListEditorProps> = ({ pageData, onPageUpdate }) => {
 									setFilters((f) => ({ ...f, priority: value }))
 								}
 							>
-								<SelectTrigger className="w-[120px] h-9">
+								<SelectTrigger className="w-full sm:w-[120px] h-9">
 									<SelectValue placeholder="Filter priority" />
 								</SelectTrigger>
 								<SelectContent>
@@ -271,7 +271,7 @@ const ListEditor: React.FC<ListEditorProps> = ({ pageData, onPageUpdate }) => {
 									setFilters((f) => ({ ...f, completed: value }))
 								}
 							>
-								<SelectTrigger className="w-[120px] h-9">
+								<SelectTrigger className="w-full sm:w-[120px] h-9">
 									<SelectValue placeholder="Filter status" />
 								</SelectTrigger>
 								<SelectContent>
@@ -286,27 +286,31 @@ const ListEditor: React.FC<ListEditorProps> = ({ pageData, onPageUpdate }) => {
 						</Button>
 					</div>
 
-					<div className="rounded-lg border">
-						<Table>
-							<TableHeader>
-								<TableRow>
-									<TableHead className="w-12 px-2"></TableHead>
-									<TableHead className="w-12 px-2"></TableHead>
-									<TableHead className="pr-2">Task</TableHead>
-									<TableHead className="w-40 px-2">Priority</TableHead>
-									<TableHead className="w-48 px-2">Due Date</TableHead>
-									<TableHead className="w-12 px-2 text-right"></TableHead>
-								</TableRow>
-							</TableHeader>
-							<DndContext
-								sensors={sensors}
-								collisionDetection={closestCenter}
-								onDragEnd={handleDragEnd}
+					<div className="rounded-lg border overflow-x-auto">
+						<DndContext
+							sensors={sensors}
+							collisionDetection={closestCenter}
+							onDragEnd={handleDragEnd}
+						>
+							<SortableContext
+								items={itemIds}
+								strategy={verticalListSortingStrategy}
 							>
-								<SortableContext
-									items={itemIds}
-									strategy={verticalListSortingStrategy}
-								>
+								<Table>
+									<TableHeader>
+										<TableRow>
+											<TableHead className="w-12 px-2"></TableHead>
+											<TableHead className="w-12 px-2"></TableHead>
+											<TableHead className="pr-2 min-w-[14rem]">Task</TableHead>
+											<TableHead className="w-40 px-2 min-w-[8rem]">
+												Priority
+											</TableHead>
+											<TableHead className="w-48 px-2 min-w-[9rem]">
+												Due Date
+											</TableHead>
+											<TableHead className="w-12 px-2 text-right"></TableHead>
+										</TableRow>
+									</TableHeader>
 									<TableBody>
 										<AnimatePresence>
 											{filteredItems.map((item) => (
@@ -319,9 +323,9 @@ const ListEditor: React.FC<ListEditorProps> = ({ pageData, onPageUpdate }) => {
 											))}
 										</AnimatePresence>
 									</TableBody>
-								</SortableContext>
-							</DndContext>
-						</Table>
+								</Table>
+							</SortableContext>
+						</DndContext>
 					</div>
 
 					{items.length === 0 && (

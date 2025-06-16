@@ -77,7 +77,7 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
 			<div
 				ref={setNodeRef}
 				style={style}
-				className="w-[350px] h-[500px] bg-muted rounded-lg flex flex-col"
+				className="w-[90vw] sm:w-[350px] h-[500px] bg-muted rounded-lg flex flex-col"
 			></div>
 		);
 	}
@@ -86,7 +86,7 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
 		<div
 			ref={setNodeRef}
 			style={style}
-			className={`w-[350px] flex-shrink-0 h-fit max-h-[calc(100vh-120px)] flex flex-col ${
+			className={`w-[90vw] sm:w-[350px] flex-shrink-0 h-fit max-h-[calc(100vh-120px)] flex flex-col ${
 				isOverlay ? "ring-2 ring-primary" : ""
 			}`}
 		>
