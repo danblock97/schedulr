@@ -23,7 +23,6 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { AnimatePresence } from "framer-motion";
 
 interface KanbanColumnProps {
 	column: Column;
@@ -166,17 +165,15 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
 			</div>
 			<div className="flex-grow flex flex-col gap-2 px-2 overflow-y-auto">
 				<SortableContext items={taskIds}>
-					<AnimatePresence>
-						{tasks.map((task) => (
-							<KanbanTask
-								key={task.id}
-								task={task}
-								onEditTask={onEditTask}
-								onDeleteTask={onDeleteTask}
-								columnTitle={column.title}
-							/>
-						))}
-					</AnimatePresence>
+					{tasks.map((task) => (
+						<KanbanTask
+							key={task.id}
+							task={task}
+							onEditTask={onEditTask}
+							onDeleteTask={onDeleteTask}
+							columnTitle={column.title}
+						/>
+					))}
 				</SortableContext>
 			</div>
 			<div className="px-2 py-1">

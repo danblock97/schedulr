@@ -43,6 +43,15 @@
 		--sidebar-accent-foreground: 240 5.9% 10%;
 		--sidebar-border: 220 13% 91%;
 		--sidebar-ring: 217.2 91.2% 59.8%;
+
+		/* BlockNote Theme Fixes */
+		--bn-colors-editor-text: hsl(var(--foreground));
+		--bn-colors-editor-background: transparent;
+		--bn-colors-menu-bg: hsl(var(--popover));
+		--bn-colors-menu-border: hsl(var(--border));
+		--bn-colors-menu-item: hsl(var(--foreground));
+		--bn-colors-menu-item-hover: hsl(var(--accent));
+		--bn-colors-accent: hsl(var(--primary));
 	}
 
 	.dark {
@@ -82,6 +91,19 @@
 		--sidebar-accent-foreground: 240 4.8% 95.9%;
 		--sidebar-border: 240 3.7% 15.9%;
 		--sidebar-ring: 217.2 91.2% 59.8%;
+
+		/* BlockNote Theme Fixes */
+		--bn-colors-editor-text: hsl(var(--foreground));
+		--bn-colors-menu-bg: hsl(var(--popover));
+		--bn-colors-menu-border: hsl(var(--border));
+		--bn-colors-menu-item: hsl(var(--foreground));
+		--bn-colors-menu-item-hover: hsl(var(--muted));
+		--bn-colors-accent: hsl(var(--primary));
+	}
+
+	.bn-suggestion-menu,
+	.bn-grid-suggestion-menu {
+		z-index: 1000 !important;
 	}
 }
 
