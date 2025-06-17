@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { useToast } from "@/components/ui/use-toast";
-import { useBlockNote } from "@blocknote/react";
+import { useCreateBlockNote } from "@blocknote/react";
 import type { PartialBlock } from "@blocknote/core";
 import { FileText } from "lucide-react";
 import EditorHeader from "./EditorHeader";
@@ -60,7 +60,7 @@ const Editor: React.FC<EditorProps> = ({ pageData, onPageUpdate }) => {
 		[pageData.id]
 	);
 
-	const editor = useBlockNote(
+	const editor = useCreateBlockNote(
 		{
 			initialContent: initialContent,
 		},

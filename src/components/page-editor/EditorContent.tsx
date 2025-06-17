@@ -1,4 +1,5 @@
 import React from "react";
+import "@blocknote/core/fonts/inter.css";
 import { BlockNoteView } from "@blocknote/shadcn";
 import type { BlockNoteEditor } from "@blocknote/core";
 import "@blocknote/core/style.css";

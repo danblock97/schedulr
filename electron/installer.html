@@ -72,7 +72,11 @@
 
 				(tsParticles || window.tsParticles).load("particles", {
 					fpsLimit: 60,
-					background: { color: "#00000000" },
+					background: {
+						color: {
+							value: "#00000000",
+						},
+					},
 					particles: {
 						number: { value: 140, density: { enable: true, area: 800 } },
 						color: { value: ["#ffffff", "#888888"] },

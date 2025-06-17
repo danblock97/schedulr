@@ -1,7 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { Link, useOutletContext } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Zap, Edit3, Laptop } from "lucide-react";
+import {
+	Zap,
+	Edit3,
+	Laptop,
+	Download,
+	Monitor,
+	CloudOff,
+	RefreshCw,
+	ChevronLeft,
+	ChevronRight,
+} from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import Particles from "@/components/Particles";
 import RotatingText from "@/components/RotatingText";
@@ -18,12 +28,15 @@ import {
 	AlertDialogAction,
 	AlertDialogCancel,
 } from "@/components/ui/alert-dialog";
+import useEmblaCarousel from "embla-carousel-react";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 const WelcomePage = () => {
 	const { user: currentUser } = useOutletContext<{ user: User | null }>();
 	const [isDarkMode, setIsDarkMode] = useState(false);
 	const isElectron = useIsElectron();
 	const [showSignupDialog, setShowSignupDialog] = useState(false);
+	const [openImage, setOpenImage] = useState<string | null>(null);
 
 	useEffect(() => {
 		const checkTheme = () => {
@@ -44,6 +57,17 @@ const WelcomePage = () => {
 	const particleColors = isDarkMode
 		? ["#FFFFFF", "#BBBBBB"]
 		: ["#333333", "#555555"];
+
+	// Desktop download link (only shown in the web app)
+	const downloadUrl = `https://github.com/danblock97/schedulr/releases/download/v${__APP_VERSION__}/scheduler-${__APP_VERSION__}.exe`;
+
+	// Embla carousel setup for desktop feature screenshots
+	const [emblaRef, emblaApi] = useEmblaCarousel({
+		loop: true,
+		align: "center",
+	});
+	const scrollPrev = () => emblaApi?.scrollPrev();
+	const scrollNext = () => emblaApi?.scrollNext();
 
 	return (
 		<div className="flex flex-col min-h-screen animate-fade-in relative overflow-hidden">
@@ -88,9 +112,27 @@ const WelcomePage = () => {
 								happens. Simple, powerful, and beautiful.
 							</p>
 							{currentUser ? (
-								<Button size="lg" asChild className="px-8 py-3 text-lg">
-									<Link to="/workspace">Open Workspace</Link>
-								</Button>
+								<div className="flex gap-4 flex-wrap">
+									<Button size="lg" asChild className="px-8 py-3 text-lg">
+										<Link to="/workspace">Open Workspace</Link>
+									</Button>
+									{!isElectron && (
+										<Button
+											variant="outline"
+											size="lg"
+											asChild
+											className="px-8 py-3 text-lg"
+										>
+											<a
+												href={downloadUrl}
+												target="_blank"
+												rel="noopener noreferrer"
+											>
+												Desktop App
+											</a>
+										</Button>
+									)}
+								</div>
 							) : isElectron ? (
 								<Button
 									size="lg"
@@ -100,9 +142,25 @@ const WelcomePage = () => {
 									Get Schedulr Free
 								</Button>
 							) : (
-								<Button size="lg" asChild className="px-8 py-3 text-lg">
-									<Link to="/auth?mode=signup">Get Schedulr Free</Link>
-								</Button>
+								<div className="flex gap-4 flex-wrap">
+									<Button size="lg" asChild className="px-8 py-3 text-lg">
+										<Link to="/auth?mode=signup">Get Schedulr Free</Link>
+									</Button>
+									<Button
+										variant="outline"
+										size="lg"
+										asChild
+										className="px-8 py-3 text-lg"
+									>
+										<a
+											href={downloadUrl}
+											target="_blank"
+											rel="noopener noreferrer"
+										>
+											Desktop App
+										</a>
+									</Button>
+								</div>
 							)}
 						</div>
 						<div className="hidden md:flex justify-center items-center">
@@ -120,6 +178,105 @@ const WelcomePage = () => {
 						</div>
 					</div>
 				</main>
+
+				{/* Desktop App Feature Section */}
+				<section
+					id="desktop-app"
+					className="py-24 md:py-32 bg-muted/20 dark:bg-muted/10 border-t border-border/50 mt-24 snap-start"
+				>
+					<div className="container mx-auto px-6 grid md:grid-cols-2 gap-24 items-center">
+						{/* Carousel */}
+						<div className="flex flex-col items-center md:items-end gap-4">
+							<div
+								className="embla overflow-hidden rounded-2xl shadow-xl w-full max-w-lg"
+								ref={emblaRef}
+							>
+								<div className="embla__container flex">
+									{[
+										"desktop-app-feature.png",
+										"desktop-app-kanban.png",
+										"desktop-app-todo.png",
+										"desktop-app-calendar.png",
+									].map((src) => (
+										<div
+											key={src}
+											className="embla__slide flex-shrink-0 w-full"
+										>
+											<img
+												src={`/images/${src}`}
+												alt={src}
+												className="w-full h-auto select-none cursor-zoom-in"
+												onClick={() => setOpenImage(`/images/${src}`)}
+											/>
+										</div>
+									))}
+								</div>
+							</div>
+							{/* Carousel Controls */}
+							<div className="flex gap-3 mt-2">
+								<Button
+									variant="ghost"
+									size="icon"
+									className="h-9 w-9"
+									onClick={scrollPrev}
+								>
+									<ChevronLeft className="h-5 w-5" />
+								</Button>
+								<Button
+									variant="ghost"
+									size="icon"
+									className="h-9 w-9"
+									onClick={scrollNext}
+								>
+									<ChevronRight className="h-5 w-5" />
+								</Button>
+							</div>
+						</div>
+
+						{/* Content */}
+						<div className="flex flex-col gap-6 text-center md:text-left max-w-xl mx-auto md:mx-0">
+							<h3 className="text-3xl md:text-4xl font-bold leading-tight text-foreground">
+								Power-up with our Desktop App
+							</h3>
+							<p className="text-muted-foreground text-lg">
+								Enjoy a distraction-free native experience, with offline access
+								and instant sync once you're back online.
+							</p>
+							<ul className="space-y-3">
+								<li className="flex items-start gap-3">
+									<Download className="h-5 w-5 text-primary flex-shrink-0" />
+									<span>Lightweight installer under 80&nbsp;MB</span>
+								</li>
+								<li className="flex items-start gap-3">
+									<Monitor className="h-5 w-5 text-primary flex-shrink-0" />
+									<span>Tailored UI for big-screen productivity</span>
+								</li>
+								<li className="flex items-start gap-3">
+									<CloudOff className="h-5 w-5 text-primary flex-shrink-0" />
+									<span>Works offline – perfect for flights & cafés</span>
+								</li>
+								<li className="flex items-start gap-3">
+									<RefreshCw className="h-5 w-5 text-primary flex-shrink-0" />
+									<span>Automatic updates keep you on the latest version</span>
+								</li>
+							</ul>
+
+							{!isElectron && (
+								<div className="mt-6">
+									<Button asChild size="lg" className="px-8 py-3 text-lg">
+										<a
+											href={downloadUrl}
+											target="_blank"
+											rel="noopener noreferrer"
+										>
+											Download Desktop&nbsp;App
+										</a>
+									</Button>
+								</div>
+							)}
+						</div>
+					</div>
+				</section>
 
 				<footer className="py-12 bg-background/50 backdrop-blur-sm">
 					<div className="container mx-auto px-6">
@@ -148,7 +305,11 @@ const WelcomePage = () => {
 									Desktop App
 								</h3>
 								<p className="text-muted-foreground">
-									Our native desktop app is coming soon, stay tuned for updates!
+									{isElectron ? (
+										"You're running the desktop app."
+									) : (
+										<span>Experience Schedulr natively on Windows.</span>
+									)}
 								</p>
 							</div>
 						</div>
@@ -209,6 +370,22 @@ const WelcomePage = () => {
 						</AlertDialogFooter>
 					</AlertDialogContent>
 				</AlertDialog>
+			)}
+
+			{/* Image Lightbox */}
+			{openImage && (
+				<Dialog
+					open={!!openImage}
+					onOpenChange={(o) => !o && setOpenImage(null)}
+				>
+					<DialogContent className="w-full max-w-3xl bg-transparent border-none p-0">
+						<img
+							src={openImage}
+							alt="Desktop screenshot"
+							className="w-full h-auto rounded-lg"
+						/>
+					</DialogContent>
+				</Dialog>
 			)}
 		</div>
 	);
