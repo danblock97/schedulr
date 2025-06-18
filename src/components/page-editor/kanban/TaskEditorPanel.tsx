@@ -30,10 +30,11 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { DatePicker } from "@/components/ui/datepicker";
-import { Task, IssueType, Priority } from "./types";
+import { Task, IssueType, Priority, Comment } from "./types";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
+import type { UniqueIdentifier } from "@dnd-kit/core";
 
 interface TaskEditorPanelProps {
 	task: Task | null;
@@ -70,6 +71,16 @@ const TaskEditorPanel: React.FC<TaskEditorPanelProps> = ({
 	onSave,
 }) => {
 	const [currentUser, setCurrentUser] = React.useState<User | null>(null);
+	const [newComment, setNewComment] = React.useState<string>("");
+	const [comments, setComments] = React.useState<Comment[]>(
+		task?.comments || []
+	);
+	const [authorCache, setAuthorCache] = React.useState<Record<string, string>>(
+		{}
+	);
+	const [currentUsername, setCurrentUsername] = React.useState<
+		string | undefined
+	>();
 
 	const form = useForm<z.infer<typeof taskSchema>>({
 		resolver: zodResolver(taskSchema),
@@ -86,6 +97,14 @@ const TaskEditorPanel: React.FC<TaskEditorPanelProps> = ({
 				data: { user },
 			} = await supabase.auth.getUser();
 			setCurrentUser(user);
+			if (user) {
+				const { data: profile } = await supabase
+					.from("profiles")
+					.select("username")
+					.eq("id", user.id)
+					.single();
+				setCurrentUsername(profile?.username || user.email?.split("@")[0]);
+			}
 		};
 		fetchUser();
 	}, []);
@@ -101,8 +120,69 @@ const TaskEditorPanel: React.FC<TaskEditorPanelProps> = ({
 				startDate: task.startDate ? new Date(task.startDate) : undefined,
 				endDate: task.endDate ? new Date(task.endDate) : undefined,
 			});
+			setComments(task.comments || []);
 		}
 	}, [task, form]);
+
+	// Fetch usernames for comments missing authorName
+	React.useEffect(() => {
+		async function enrichComments() {
+			if (!task || !comments) return;
+			const missing = comments.filter((c) => !c.authorName && c.authorId);
+			const idsToFetch = [
+				...new Set(
+					missing
+						.filter((c) => c.authorId && !authorCache[c.authorId!])
+						.map((c) => c.authorId!)
+				),
+			];
+			if (idsToFetch.length === 0) return;
+			const { data, error } = await supabase
+				.from("profiles")
+				.select("id, username")
+				.in("id", idsToFetch);
+			if (error || !data) return;
+			const newCache: Record<string, string> = { ...authorCache };
+			data.forEach((p) => {
+				if (p.username) newCache[p.id] = p.username;
+			});
+			setAuthorCache(newCache);
+			setComments((prev) =>
+				prev.map((c) => {
+					if (!c.authorName && c.authorId && newCache[c.authorId]) {
+						return { ...c, authorName: newCache[c.authorId] };
+					}
+					return c;
+				})
+			);
+			// Persist updates
+			if (missing.length > 0) {
+				onSave({ ...task, comments: comments });
+			}
+		}
+		enrichComments();
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [task, comments]);
+
+	const generateId = React.useCallback(() => {
+		return `id_${Math.random().toString(36).substr(2, 9)}`;
+	}, []);
+
+	const handleAddComment = () => {
+		if (!newComment.trim() || !task) return;
+		const comment: Comment = {
+			id: generateId() as UniqueIdentifier,
+			text: newComment.trim(),
+			createdAt: new Date().toISOString(),
+			authorId: currentUser?.id,
+			authorEmail: currentUser?.email || undefined,
+			authorName: currentUsername,
+		};
+		const updatedComments = [...comments, comment];
+		setComments(updatedComments);
+		onSave({ ...task, comments: updatedComments });
+		setNewComment("");
+	};
 
 	if (!task) return null;
 
@@ -110,6 +190,7 @@ const TaskEditorPanel: React.FC<TaskEditorPanelProps> = ({
 		const updatedTask: Task = {
 			...task,
 			...values,
+			comments,
 			assignee: values.assignee === "unassigned" ? undefined : values.assignee,
 			startDate: values.startDate?.toISOString(),
 			endDate: values.endDate?.toISOString(),
@@ -278,6 +359,48 @@ const TaskEditorPanel: React.FC<TaskEditorPanelProps> = ({
 										</FormItem>
 									)}
 								/>
+							</div>
+							{/* Comments section */}
+							<div className="pt-4 border-t">
+								<h3 className="text-sm font-medium mb-2">Comments</h3>
+								<div className="space-y-3 max-h-48 overflow-y-auto pr-2">
+									{comments.length > 0 ? (
+										comments.map((c) => (
+											<div key={c.id} className="border rounded-md p-2 text-sm">
+												<p className="whitespace-pre-wrap break-words">
+													{c.text}
+												</p>
+												<span className="text-xs text-muted-foreground block mt-1">
+													{c.authorName
+														? `${c.authorName} • `
+														: c.authorEmail
+														? `${c.authorEmail} • `
+														: ""}
+													{new Date(c.createdAt).toLocaleString()}
+												</span>
+											</div>
+										))
+									) : (
+										<p className="text-muted-foreground text-sm">
+											No comments yet.
+										</p>
+									)}
+								</div>
+								<div className="mt-3 flex gap-2">
+									<Textarea
+										value={newComment}
+										onChange={(e) => setNewComment(e.target.value)}
+										placeholder="Add a comment..."
+										className="flex-grow min-h-[80px]"
+									/>
+									<Button
+										type="button"
+										onClick={handleAddComment}
+										disabled={!newComment.trim()}
+									>
+										Add
+									</Button>
+								</div>
 							</div>
 						</form>
 					</Form>
