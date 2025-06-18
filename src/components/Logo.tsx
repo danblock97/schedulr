@@ -28,7 +28,11 @@ const Logo: React.FC<LogoProps> = ({ className, alt = "Schedulr Logo" }) => {
 		: `${import.meta.env.BASE_URL}images/logo-dark.png`;
 
 	return (
-		<img src={logoSrc} alt={alt} className={cn("select-none", className)} />
+		<img
+			src={logoSrc}
+			alt={alt}
+			className={cn("select-none object-contain", className)}
+		/>
 	);
 };
 

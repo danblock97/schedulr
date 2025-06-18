@@ -117,8 +117,8 @@
 		],
 		"extraResources": [
 			{
-				"from": "public/images/logo.ico",
-				"to": "logo.ico"
+				"from": "public/images/logo-light.png",
+				"to": "logo-light.png"
 			}
 		],
 		"publish": [
@@ -136,7 +136,7 @@
 		],
 		"artifactName": "scheduler-${version}.${ext}",
 		"win": {
-			"icon": "public/images/desktop-logo.png"
+			"icon": "public/images/logo-light.png"
 		}
 	}
 }

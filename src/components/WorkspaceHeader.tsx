@@ -40,6 +40,13 @@ import {
 	AlertDialogAction,
 	AlertDialogCancel,
 } from "@/components/ui/alert-dialog";
+import { useIsMobile } from "@/hooks/use-mobile";
+import {
+	Drawer,
+	DrawerContent,
+	DrawerHeader,
+	DrawerTitle,
+} from "@/components/ui/drawer";
 
 interface WorkspaceHeaderProps {
 	currentUser: User | null;
@@ -71,6 +78,9 @@ const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
 	const isElectron = useIsElectron();
 
 	const [showSignupDialog, setShowSignupDialog] = React.useState(false);
+
+	const isMobile = useIsMobile();
+	const [mobileNavOpen, setMobileNavOpen] = React.useState(false);
 
 	const toggleTheme = async () => {
 		const newTheme = document.documentElement.classList.contains("dark")
@@ -190,201 +200,281 @@ const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
 		? ({ WebkitAppRegion: "drag" } as React.CSSProperties)
 		: undefined;
 
+	const handleLogoClick = (e: React.MouseEvent) => {
+		if (!currentUser && !withSidebar && isMobile) {
+			e.preventDefault();
+			setMobileNavOpen(true);
+		}
+	};
+
 	return (
-		<header
-			className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-4 md:px-6 justify-between"
-			style={headerStyle}
-		>
-			<div className="flex items-center gap-4 no-drag">
-				{withSidebar && (
-					<div className="md:hidden">
-						<SidebarTrigger />
-					</div>
-				)}
-				<Link
-					to="/workspace"
-					className="flex items-center gap-2 font-bold text-lg mr-4"
-				>
-					{workspaceInfo?.iconUrl ? (
-						<Avatar className="h-7 w-7">
-							<AvatarImage
-								src={workspaceInfo.iconUrl}
-								alt={workspaceInfo.name || "Workspace"}
-							/>
-							<AvatarFallback>
-								<Logo className="h-4 w-4" />
-							</AvatarFallback>
-						</Avatar>
-					) : (
-						<Logo className="h-5 w-5" />
+		<>
+			<header
+				className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-4 md:px-6 justify-between"
+				style={headerStyle}
+			>
+				<div className="flex items-center gap-4 no-drag">
+					{withSidebar && (
+						<div className="md:hidden">
+							<SidebarTrigger />
+						</div>
 					)}
-					<span className="hidden sm:inline-block truncate">
-						{workspaceInfo?.name || "Schedulr"}
-					</span>
-				</Link>
-				<NavigationMenu className="hidden md:flex">
-					<NavigationMenuList>
-						{currentUser && (
+					<Link
+						to={currentUser ? "/workspace" : "/"}
+						onClick={handleLogoClick}
+						className="flex items-center gap-2 font-bold text-lg mr-4"
+					>
+						{workspaceInfo?.iconUrl ? (
+							<Avatar className="h-7 w-7">
+								<AvatarImage
+									src={workspaceInfo.iconUrl}
+									alt={workspaceInfo.name || "Workspace"}
+								/>
+								<AvatarFallback>
+									<Logo className="h-5 w-auto" />
+								</AvatarFallback>
+							</Avatar>
+						) : (
+							<Logo className="h-12 w-12" />
+						)}
+						<span className="hidden sm:inline-block truncate">
+							{workspaceInfo?.name || "Schedulr"}
+						</span>
+					</Link>
+					<NavigationMenu className="hidden md:flex">
+						<NavigationMenuList>
+							{currentUser && (
+								<NavigationMenuItem>
+									<Link
+										to="/workspace"
+										className={navigationMenuTriggerStyle()}
+									>
+										Dashboard
+									</Link>
+								</NavigationMenuItem>
+							)}
 							<NavigationMenuItem>
-								<Link to="/workspace" className={navigationMenuTriggerStyle()}>
-									Dashboard
+								<Link to="/" className={navigationMenuTriggerStyle()}>
+									Home
 								</Link>
 							</NavigationMenuItem>
-						)}
-						<NavigationMenuItem>
-							<Link to="/" className={navigationMenuTriggerStyle()}>
-								Home
-							</Link>
-						</NavigationMenuItem>
-						<NavigationMenuItem>
-							<Link to="/pricing" className={navigationMenuTriggerStyle()}>
-								Pricing
-							</Link>
-						</NavigationMenuItem>
-						<NavigationMenuItem>
-							<Link to="/contact" className={navigationMenuTriggerStyle()}>
-								Contact
-							</Link>
-						</NavigationMenuItem>
-					</NavigationMenuList>
-				</NavigationMenu>
-			</div>
+							<NavigationMenuItem>
+								<Link to="/pricing" className={navigationMenuTriggerStyle()}>
+									Pricing
+								</Link>
+							</NavigationMenuItem>
+							<NavigationMenuItem>
+								<Link to="/contact" className={navigationMenuTriggerStyle()}>
+									Contact
+								</Link>
+							</NavigationMenuItem>
+						</NavigationMenuList>
+					</NavigationMenu>
+				</div>
 
-			<div className="flex items-center gap-2 md:gap-4 no-drag">
-				<div className="relative flex-1 max-w-xs" ref={searchContainerRef}>
-					<Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-					<Input
-						type="search"
-						placeholder="Search..."
-						className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[320px]"
-						value={searchTerm}
-						onChange={(e) => setSearchTerm(e.target.value)}
-						onFocus={() => setIsSearchFocused(true)}
-						disabled={!currentUser}
-					/>
-					{isSearchFocused && currentUser && searchTerm.length > 0 && (
-						<div className="absolute top-full mt-2 w-full bg-background border rounded-md shadow-lg z-50 max-h-60 overflow-y-auto">
-							{isSearchLoading ? (
-								<div className="p-2 space-y-1">
-									<Skeleton className="h-5 w-3/4" />
-									<Skeleton className="h-5 w-2/3" />
-								</div>
-							) : searchResults.length > 0 ? (
-								<ul className="py-1">
-									{searchResults.map((page) => (
-										<li key={page.id}>
-											<button
-												onClick={() => handleSelectSearchResult(page.id)}
-												className="w-full text-left flex items-center gap-2 px-2 py-1.5 hover:bg-muted text-sm"
-											>
-												<PageIcon
-													type={page.type}
-													className="h-4 w-4 text-muted-foreground flex-shrink-0"
-												/>
-												<span className="truncate">{page.title}</span>
-											</button>
-										</li>
-									))}
-								</ul>
+				<div className="flex items-center gap-2 md:gap-4 no-drag">
+					<div className="relative flex-1 max-w-xs" ref={searchContainerRef}>
+						<Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+						<Input
+							type="search"
+							placeholder="Search..."
+							className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[320px]"
+							value={searchTerm}
+							onChange={(e) => setSearchTerm(e.target.value)}
+							onFocus={() => setIsSearchFocused(true)}
+							disabled={!currentUser}
+						/>
+						{isSearchFocused && currentUser && searchTerm.length > 0 && (
+							<div className="absolute top-full mt-2 w-full bg-background border rounded-md shadow-lg z-50 max-h-60 overflow-y-auto">
+								{isSearchLoading ? (
+									<div className="p-2 space-y-1">
+										<Skeleton className="h-5 w-3/4" />
+										<Skeleton className="h-5 w-2/3" />
+									</div>
+								) : searchResults.length > 0 ? (
+									<ul className="py-1">
+										{searchResults.map((page) => (
+											<li key={page.id}>
+												<button
+													onClick={() => handleSelectSearchResult(page.id)}
+													className="w-full text-left flex items-center gap-2 px-2 py-1.5 hover:bg-muted text-sm"
+												>
+													<PageIcon
+														type={page.type}
+														className="h-4 w-4 text-muted-foreground flex-shrink-0"
+													/>
+													<span className="truncate">{page.title}</span>
+												</button>
+											</li>
+										))}
+									</ul>
+								) : (
+									<p className="p-2 text-sm text-muted-foreground">
+										No results for "{searchTerm}".
+									</p>
+								)}
+							</div>
+						)}
+					</div>
+					<Button
+						variant="ghost"
+						size="icon"
+						onClick={toggleTheme}
+						aria-label="Toggle theme"
+					>
+						{isDarkMode ? (
+							<Sun className="h-5 w-5" />
+						) : (
+							<Moon className="h-5 w-5" />
+						)}
+					</Button>
+					{currentUser && <NotificationsBell user={currentUser} />}
+					{currentUser ? (
+						<DropdownMenu>
+							<DropdownMenuTrigger asChild>
+								<Button variant="ghost" size="icon" className="rounded-full">
+									<Avatar className="h-8 w-8">
+										<AvatarImage
+											src={currentUser.user_metadata?.avatar_url}
+											alt={username || "User"}
+										/>
+										<AvatarFallback>
+											{getInitials(currentUser.email)}
+										</AvatarFallback>
+									</Avatar>
+								</Button>
+							</DropdownMenuTrigger>
+							<DropdownMenuContent align="end" className="w-56">
+								<DropdownMenuLabel className="font-normal">
+									<div className="flex flex-col space-y-1">
+										<p className="text-sm font-medium leading-none">
+											{username}
+										</p>
+										<p className="text-xs leading-none text-muted-foreground">
+											{currentUser.email}
+										</p>
+									</div>
+								</DropdownMenuLabel>
+								<DropdownMenuSeparator />
+								<DropdownMenuItem onClick={() => navigate("/settings")}>
+									<Settings className="mr-2 h-4 w-4" />
+									<span>Settings</span>
+								</DropdownMenuItem>
+								<DropdownMenuSeparator />
+								<DropdownMenuItem onClick={handleLogout}>
+									<LogOut className="mr-2 h-4 w-4" />
+									<span>Log out</span>
+								</DropdownMenuItem>
+							</DropdownMenuContent>
+						</DropdownMenu>
+					) : (
+						<div className="flex items-center gap-2">
+							<Button asChild variant="ghost">
+								<Link to="/auth?mode=login">Log In</Link>
+							</Button>
+							{isElectron ? (
+								<Button onClick={() => setShowSignupDialog(true)}>
+									Sign Up
+								</Button>
 							) : (
-								<p className="p-2 text-sm text-muted-foreground">
-									No results for "{searchTerm}".
-								</p>
+								<Button asChild>
+									<Link to="/auth?mode=signup">Sign Up</Link>
+								</Button>
 							)}
 						</div>
 					)}
+					<WindowControls />
 				</div>
-				<Button
-					variant="ghost"
-					size="icon"
-					onClick={toggleTheme}
-					aria-label="Toggle theme"
-				>
-					{isDarkMode ? (
-						<Sun className="h-5 w-5" />
-					) : (
-						<Moon className="h-5 w-5" />
-					)}
-				</Button>
-				{currentUser && <NotificationsBell user={currentUser} />}
-				{currentUser ? (
-					<DropdownMenu>
-						<DropdownMenuTrigger asChild>
-							<Button variant="ghost" size="icon" className="rounded-full">
-								<Avatar className="h-8 w-8">
-									<AvatarImage
-										src={currentUser.user_metadata?.avatar_url}
-										alt={username || "User"}
-									/>
-									<AvatarFallback>
-										{getInitials(currentUser.email)}
-									</AvatarFallback>
-								</Avatar>
-							</Button>
-						</DropdownMenuTrigger>
-						<DropdownMenuContent align="end" className="w-56">
-							<DropdownMenuLabel className="font-normal">
-								<div className="flex flex-col space-y-1">
-									<p className="text-sm font-medium leading-none">{username}</p>
-									<p className="text-xs leading-none text-muted-foreground">
-										{currentUser.email}
-									</p>
-								</div>
-							</DropdownMenuLabel>
-							<DropdownMenuSeparator />
-							<DropdownMenuItem onClick={() => navigate("/settings")}>
-								<Settings className="mr-2 h-4 w-4" />
-								<span>Settings</span>
-							</DropdownMenuItem>
-							<DropdownMenuSeparator />
-							<DropdownMenuItem onClick={handleLogout}>
-								<LogOut className="mr-2 h-4 w-4" />
-								<span>Log out</span>
-							</DropdownMenuItem>
-						</DropdownMenuContent>
-					</DropdownMenu>
-				) : (
-					<div className="flex items-center gap-2">
-						<Button asChild variant="ghost">
-							<Link to="/auth?mode=login">Log In</Link>
-						</Button>
-						{isElectron ? (
-							<Button onClick={() => setShowSignupDialog(true)}>Sign Up</Button>
-						) : (
-							<Button asChild>
-								<Link to="/auth?mode=signup">Sign Up</Link>
-							</Button>
-						)}
-					</div>
+				{isElectron && (
+					<AlertDialog
+						open={showSignupDialog}
+						onOpenChange={setShowSignupDialog}
+					>
+						<AlertDialogContent>
+							<AlertDialogHeader>
+								<AlertDialogTitle>Continue sign up in browser</AlertDialogTitle>
+								<AlertDialogDescription>
+									Signup requires email verification in your default browser.
+									Continue?
+								</AlertDialogDescription>
+							</AlertDialogHeader>
+							<AlertDialogFooter>
+								<AlertDialogCancel>Cancel</AlertDialogCancel>
+								<AlertDialogAction
+									onClick={() => {
+										window.electron?.openExternal(
+											`${window.location.origin}/auth?mode=signup&source=desktop`
+										);
+									}}
+								>
+									Continue in Browser
+								</AlertDialogAction>
+							</AlertDialogFooter>
+						</AlertDialogContent>
+					</AlertDialog>
 				)}
-				<WindowControls />
-			</div>
-			{isElectron && (
-				<AlertDialog open={showSignupDialog} onOpenChange={setShowSignupDialog}>
-					<AlertDialogContent>
-						<AlertDialogHeader>
-							<AlertDialogTitle>Continue sign up in browser</AlertDialogTitle>
-							<AlertDialogDescription>
-								Signup requires email verification in your default browser.
-								Continue?
-							</AlertDialogDescription>
-						</AlertDialogHeader>
-						<AlertDialogFooter>
-							<AlertDialogCancel>Cancel</AlertDialogCancel>
-							<AlertDialogAction
-								onClick={() => {
-									window.electron?.openExternal(
-										`${window.location.origin}/auth?mode=signup&source=desktop`
-									);
-								}}
+			</header>
+			{/* Mobile marketing navigation drawer */}
+			{!withSidebar && (
+				<Drawer open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
+					<DrawerContent className="pb-8">
+						<DrawerHeader>
+							<DrawerTitle>Menu</DrawerTitle>
+						</DrawerHeader>
+						<div className="flex flex-col gap-4 p-4">
+							<Link
+								to="/"
+								onClick={() => setMobileNavOpen(false)}
+								className="text-lg font-medium"
 							>
-								Continue in Browser
-							</AlertDialogAction>
-						</AlertDialogFooter>
-					</AlertDialogContent>
-				</AlertDialog>
+								Home
+							</Link>
+							<Link
+								to="/pricing"
+								onClick={() => setMobileNavOpen(false)}
+								className="text-lg font-medium"
+							>
+								Pricing
+							</Link>
+							<Link
+								to="/contact"
+								onClick={() => setMobileNavOpen(false)}
+								className="text-lg font-medium"
+							>
+								Contact
+							</Link>
+							{currentUser ? (
+								<Link
+									to="/workspace"
+									onClick={() => setMobileNavOpen(false)}
+									className="text-lg font-medium"
+								>
+									Dashboard
+								</Link>
+							) : (
+								<div className="flex flex-col gap-2 pt-4">
+									<Button
+										asChild
+										variant="ghost"
+										className="w-full justify-start"
+										onClick={() => setMobileNavOpen(false)}
+									>
+										<Link to="/auth?mode=login">Log In</Link>
+									</Button>
+									<Button
+										asChild
+										className="w-full justify-start"
+										onClick={() => setMobileNavOpen(false)}
+									>
+										<Link to="/auth?mode=signup">Sign Up</Link>
+									</Button>
+								</div>
+							)}
+						</div>
+					</DrawerContent>
+				</Drawer>
 			)}
-		</header>
+		</>
 	);
 };
 

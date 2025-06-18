@@ -69,6 +69,8 @@ const WelcomePage = () => {
 	const scrollPrev = () => emblaApi?.scrollPrev();
 	const scrollNext = () => emblaApi?.scrollNext();
 
+	const baseImagePath = `${import.meta.env.BASE_URL}images/`;
+
 	return (
 		<div className="flex flex-col min-h-screen animate-fade-in relative overflow-hidden">
 			<div className="absolute top-0 left-0 w-full h-full z-0">
@@ -89,7 +91,7 @@ const WelcomePage = () => {
 				<main className="flex-grow flex items-center justify-center px-4">
 					<div className="grid md:grid-cols-2 gap-8 items-center max-w-6xl w-full">
 						<div className="flex flex-col items-start text-left">
-							<h2 className="text-5xl md:text-6xl font-bold text-foreground mb-6 leading-tight">
+							<h2 className="text-5xl md:text-6xl font-bold text-foreground mb-4 pt-56 leading-tight">
 								Organise your work,
 								<br />
 								and your{" "}
@@ -203,10 +205,10 @@ const WelcomePage = () => {
 											className="embla__slide flex-shrink-0 w-full"
 										>
 											<img
-												src={`/images/${src}`}
+												src={`${baseImagePath}${src}`}
 												alt={src}
 												className="w-full h-auto select-none cursor-zoom-in"
-												onClick={() => setOpenImage(`/images/${src}`)}
+												onClick={() => setOpenImage(`${baseImagePath}${src}`)}
 											/>
 										</div>
 									))}
