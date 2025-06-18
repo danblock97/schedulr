@@ -21,6 +21,8 @@ import { supabase } from "./integrations/supabase/client";
 import { applyTheme, type Theme } from "./lib/theme";
 import useIpcSupabase from "@/hooks/useIpcSupabase";
 import useDesktopDeepLink from "@/hooks/useDesktopDeepLink";
+import ChangelogPage from "./pages/ChangelogPage";
+import DesktopChangelogDialog from "@/components/dialogs/DesktopChangelogDialog";
 
 const queryClient = new QueryClient();
 
@@ -109,6 +111,7 @@ const App = () => {
 									<Route path="/contact" element={<ContactPage />} />
 									<Route path="/terms" element={<TermsOfServicePage />} />
 									<Route path="/privacy" element={<PrivacyPolicyPage />} />
+									<Route path="/changelog" element={<ChangelogPage />} />
 								</Route>
 
 								<Route path="/auth" element={<AuthPage />} />
@@ -126,6 +129,7 @@ const App = () => {
 								{/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
 								<Route path="*" element={<NotFound />} />
 							</Routes>
+							<DesktopChangelogDialog />
 						</Router>
 					);
 				})()}
