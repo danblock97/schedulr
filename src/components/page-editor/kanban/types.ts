@@ -17,6 +17,14 @@ export interface Comment {
 	createdAt: string;
 }
 
+export interface Attachment {
+	id: string;
+	name: string;
+	url: string;
+	size: number;
+	mimeType: string;
+}
+
 export interface Task {
 	id: UniqueIdentifier;
 	columnId: UniqueIdentifier;
@@ -29,6 +37,8 @@ export interface Task {
 	priority?: Priority;
 	/** Optional list of comments left on this task */
 	comments?: Comment[];
+	/** Files attached to this task */
+	attachments?: Attachment[];
 	// content field is deprecated, will be migrated to summary
 	content?: string;
 }
