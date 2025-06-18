@@ -9,4 +9,6 @@ contextBridge.exposeInMainWorld("electron", {
 	onSupabaseLogin: (cb) =>
 		ipcRenderer.on("supabase-login", (_e, tokens) => cb(tokens)),
 	onGlobalQuickAdd: (cb) => ipcRenderer.on("global-quick-add", () => cb()),
+	setStartup: (opts) => ipcRenderer.invoke("set-startup", opts),
+	getStartup: () => ipcRenderer.invoke("get-startup"),
 });
