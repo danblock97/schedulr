@@ -1,4 +1,10 @@
-const { app, BrowserWindow, ipcMain, shell } = require("electron");
+const {
+	app,
+	BrowserWindow,
+	ipcMain,
+	shell,
+	globalShortcut,
+} = require("electron");
 const path = require("node:path");
 const { autoUpdater } = require("electron-updater");
 const isDev = require("electron-is-dev");
@@ -90,6 +96,20 @@ app.whenReady().then(() => {
 		autoUpdater.autoDownload = true;
 		autoUpdater.checkForUpdates();
 	}
+
+	// Register global shortcut for Quick Add once the app is ready
+	const shortcut =
+		process.platform === "darwin"
+			? "Command+Shift+Space"
+			: "Control+Shift+Space";
+	globalShortcut.register(shortcut, () => {
+		if (mainWindow) {
+			if (mainWindow.isMinimized()) mainWindow.restore();
+			mainWindow.show();
+			mainWindow.focus();
+			mainWindow.webContents.send("global-quick-add");
+		}
+	});
 });
 
 autoUpdater.on("checking-for-update", () => {
@@ -200,4 +220,8 @@ app.on("second-instance", (event, argv) => {
 app.on("open-url", (event, url) => {
 	event.preventDefault();
 	handleAuthUrl(url);
+});
+
+app.on("will-quit", () => {
+	globalShortcut.unregisterAll();
 });

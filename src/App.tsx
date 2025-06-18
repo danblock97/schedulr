@@ -23,6 +23,7 @@ import useIpcSupabase from "@/hooks/useIpcSupabase";
 import useDesktopDeepLink from "@/hooks/useDesktopDeepLink";
 import ChangelogPage from "./pages/ChangelogPage";
 import DesktopChangelogDialog from "@/components/dialogs/DesktopChangelogDialog";
+import DesktopQuickAddDialog from "@/components/dialogs/DesktopQuickAddDialog";
 
 const queryClient = new QueryClient();
 
@@ -130,6 +131,7 @@ const App = () => {
 								<Route path="*" element={<NotFound />} />
 							</Routes>
 							<DesktopChangelogDialog />
+							<DesktopQuickAddDialog />
 						</Router>
 					);
 				})()}

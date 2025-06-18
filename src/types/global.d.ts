@@ -10,6 +10,7 @@ declare global {
 			onSupabaseLogin: (
 				cb: (tokens: { access: string; refresh: string }) => void
 			) => void;
+			onGlobalQuickAdd: (cb: () => void) => void;
 		};
 	}
 }
