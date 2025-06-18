@@ -90,7 +90,7 @@ const WorkspaceLayout: React.FC = () => {
 
 	if (isLoadingAuth) {
 		return (
-			<div className="flex items-center justify-center min-h-screen">
+			<div className="flex items-center justify-center min-h-screen bg-black">
 				Loading user data...
 			</div>
 		);
