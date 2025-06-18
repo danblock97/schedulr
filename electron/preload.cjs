@@ -11,4 +11,5 @@ contextBridge.exposeInMainWorld("electron", {
 	onGlobalQuickAdd: (cb) => ipcRenderer.on("global-quick-add", () => cb()),
 	setStartup: (opts) => ipcRenderer.invoke("set-startup", opts),
 	getStartup: () => ipcRenderer.invoke("get-startup"),
+	installUpdate: () => ipcRenderer.invoke("install-update"),
 });

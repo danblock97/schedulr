@@ -15,6 +15,7 @@ declare global {
 			onGlobalQuickAdd: (cb: () => void) => void;
 			setStartup: (opts: { enabled: boolean; hidden: boolean }) => Promise<any>;
 			getStartup: () => Promise<{ enabled: boolean; hidden: boolean }>;
+			installUpdate: () => Promise<void>;
 		};
 	}
 }

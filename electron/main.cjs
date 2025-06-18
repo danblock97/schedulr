@@ -13,7 +13,7 @@ const isDev = require("electron-is-dev");
 
 let mainWindow;
 let installerWindow;
-const MIN_SPLASH_TIME = 5000; // ms
+const MIN_SPLASH_TIME = 3000; // ms
 let splashShownAt = 0;
 let pendingAuthTokens = null;
 const deeplinkScheme = "schedulr";
@@ -133,7 +133,9 @@ autoUpdater.on("download-progress", () => {
 
 autoUpdater.on("update-downloaded", () => {
 	installerWindow?.webContents.send("update-status", "update-downloaded");
-	setTimeout(() => autoUpdater.quitAndInstall(), 1000);
+	if (mainWindow) {
+		mainWindow.webContents.send("update-status", "update-downloaded");
+	}
 });
 
 autoUpdater.on("update-not-available", () => {
@@ -293,4 +295,8 @@ ipcMain.handle("get-startup", () => {
 		enabled: s.openAtLogin,
 		hidden: s.args ? s.args.includes("--hidden") : s.openAsHidden,
 	};
+});
+
+ipcMain.handle("install-update", () => {
+	autoUpdater.quitAndInstall();
 });
