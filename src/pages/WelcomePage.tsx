@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import useEmblaCarousel from "embla-carousel-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { motion } from "framer-motion";
 
 const WelcomePage = () => {
 	const { user: currentUser } = useOutletContext<{ user: User | null }>();
@@ -70,6 +71,22 @@ const WelcomePage = () => {
 	const scrollNext = () => emblaApi?.scrollNext();
 
 	const baseImagePath = `${import.meta.env.BASE_URL}images/`;
+
+	// Hard-coded user reviews for the marketing homepage (web only)
+	const reviews = [
+		{
+			text: "Schedulr has completely transformed the way our team collaborates.",
+			name: "Sarah K.",
+		},
+		{
+			text: "Finally, a project tool that's both powerful and delightful to use.",
+			name: "Michael B.",
+		},
+		{
+			text: "The desktop app and kanban boards are absolute game-changers.",
+			name: "Aisha R.",
+		},
+	];
 
 	return (
 		<div className="flex flex-col min-h-screen animate-fade-in relative overflow-hidden">
@@ -277,6 +294,53 @@ const WelcomePage = () => {
 								</div>
 							)}
 						</div>
+					</div>
+				</section>
+
+				{/* Reviews Section */}
+				<section
+					id="reviews"
+					className="py-24 md:py-32 bg-background border-t border-border/50 snap-start"
+				>
+					<div className="container mx-auto px-6">
+						<motion.h3
+							className="text-3xl md:text-4xl font-bold text-foreground text-center"
+							initial={{ opacity: 0, y: 20 }}
+							whileInView={{ opacity: 1, y: 0 }}
+							viewport={{ once: true }}
+							transition={{ duration: 0.5 }}
+						>
+							What our users say
+						</motion.h3>
+
+						<motion.div
+							className="grid gap-8 mt-12 md:grid-cols-3"
+							variants={{
+								visible: {
+									transition: { staggerChildren: 0.2 },
+								},
+							}}
+							initial="hidden"
+							whileInView="visible"
+							viewport={{ once: true, amount: 0.3 }}
+						>
+							{reviews.map((review, idx) => (
+								<motion.div
+									key={idx}
+									className="p-8 rounded-2xl bg-muted/20 dark:bg-muted/10 shadow-lg backdrop-blur-sm"
+									variants={{
+										hidden: { opacity: 0, y: 40 },
+										visible: { opacity: 1, y: 0 },
+									}}
+									transition={{ duration: 0.6, ease: "easeOut" }}
+								>
+									<p className="text-lg italic mb-4">
+										&ldquo;{review.text}&rdquo;
+									</p>
+									<p className="font-semibold text-primary">{review.name}</p>
+								</motion.div>
+							))}
+						</motion.div>
 					</div>
 				</section>
 
