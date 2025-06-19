@@ -14,7 +14,7 @@ const windowStateKeeper = require("electron-window-state");
 
 let mainWindow;
 let installerWindow;
-const MIN_SPLASH_TIME = 3000; // ms
+const MIN_SPLASH_TIME = 500; // ms
 let splashShownAt = 0;
 let pendingAuthTokens = null;
 const deeplinkScheme = "schedulr";
