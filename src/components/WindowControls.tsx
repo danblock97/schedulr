@@ -30,7 +30,11 @@ const WindowControls: React.FC = () => {
 			</button>
 			<button
 				className={`${buttonClasses} hover:text-red-500`}
-				onClick={() => window.electron?.windowAction("close")}
+				onClick={() => {
+					const pref =
+						localStorage.getItem("desktop_minimize_to_tray") === "true";
+					window.electron?.windowAction(pref ? "hide" : "close");
+				}}
 				aria-label="Close"
 			>
 				<X className="w-4 h-4" />

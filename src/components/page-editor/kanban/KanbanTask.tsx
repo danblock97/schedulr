@@ -3,7 +3,14 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Trash2, User, Calendar, CheckCircle2, XCircle } from "lucide-react";
+import {
+	Trash2,
+	User,
+	Calendar,
+	CheckCircle2,
+	XCircle,
+	MessageCircle,
+} from "lucide-react";
 import { Task } from "./types";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -72,8 +79,13 @@ const KanbanTask: React.FC<KanbanTaskProps> = ({
 		);
 	}
 
+	const hasComments = task.comments && task.comments.length > 0;
 	const hasFooterContent =
-		task.priority || task.issueType || task.assignee || task.endDate;
+		task.priority ||
+		task.issueType ||
+		task.assignee ||
+		task.endDate ||
+		hasComments;
 	const isResolved = columnTitle === "Resolved" || columnTitle === "Done";
 	const isWontFix = columnTitle === "Won't fix";
 
@@ -143,7 +155,7 @@ const KanbanTask: React.FC<KanbanTaskProps> = ({
 					</div>
 					{hasFooterContent && (
 						<div className="pl-8 w-full flex items-center justify-between flex-wrap gap-2">
-							<div className="flex gap-2 flex-wrap">
+							<div className="flex gap-2 flex-wrap items-center">
 								{task.issueType && (
 									<Badge variant="secondary" className="font-normal">
 										{task.issueType}
@@ -170,6 +182,12 @@ const KanbanTask: React.FC<KanbanTaskProps> = ({
 									>
 										{task.priority}
 									</Badge>
+								)}
+								{hasComments && (
+									<div className="flex items-center gap-1 text-muted-foreground text-xs">
+										<MessageCircle className="h-4 w-4" />
+										<span>{task.comments!.length}</span>
+									</div>
 								)}
 							</div>
 							<div className="flex items-center gap-3 text-muted-foreground">

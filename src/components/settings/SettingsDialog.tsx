@@ -13,6 +13,7 @@ import PreferencesSettings from "./sections/PreferencesSettings";
 import ConnectionsSettings from "./sections/ConnectionsSettings";
 import GeneralSettings from "./sections/GeneralSettings";
 import AppVersionSettings from "./sections/AppVersionSettings";
+import DesktopAppSettings from "./sections/DesktopAppSettings";
 import type { User } from "@supabase/supabase-js";
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -64,24 +65,7 @@ const SettingsDialog: React.FC<SettingsDialogProps> = ({
 			case "general":
 				return <GeneralSettings profile={profile} userId={user?.id} />;
 			case "desktop-app":
-				return (
-					<div className="space-y-8">
-						<div>
-							<h2 className="text-2xl font-bold">Desktop App</h2>
-							<p className="text-muted-foreground">
-								Manage desktop app settings here.
-							</p>
-						</div>
-						<div className="flex items-center justify-center h-64 border-2 border-dashed rounded-lg">
-							<div className="text-center">
-								<h3 className="text-lg font-semibold">Coming Soon!</h3>
-								<p className="text-muted-foreground">
-									The desktop app is under construction.
-								</p>
-							</div>
-						</div>
-					</div>
-				);
+				return <DesktopAppSettings />;
 			case "app-version":
 				return <AppVersionSettings />;
 			default:

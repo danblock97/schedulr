@@ -6,12 +6,48 @@ import type { Tables } from "@/integrations/supabase/types";
 import { useNavigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import PageIcon from "./PageIcon";
+import { Calendar, ListTodo, KanbanSquare, FileText } from "lucide-react";
+
+type SearchHit = {
+	entity_id: string;
+	entity_type: "page" | "kanban_task" | "list_item" | "calendar_event";
+	title: string;
+	snippet: string | null;
+	page_id: string;
+};
+
+const iconFor = (type: SearchHit["entity_type"] | Tables<"pages">["type"]) => {
+	if (type === "KANBAN" || type === "kanban_task")
+		return <KanbanSquare className="h-5 w-5" />;
+	if (type === "CALENDAR" || type === "calendar_event")
+		return <Calendar className="h-5 w-5" />;
+	if (type === "LIST" || type === "list_item")
+		return <ListTodo className="h-5 w-5" />;
+	return <FileText className="h-5 w-5" />;
+};
+
+const cleanSnippet = (s: string) => {
+	// try to show highlighted part first
+	const match = s.match(/<b>(.*?)<\/b>/i);
+	if (match && match[1]) return match[1];
+	let cleaned = s;
+	cleaned = cleaned.replace(/<[^>]+>/g, ""); // strip html
+	cleaned = cleaned.replace(/[\{\}\"\[\]]/g, "");
+	cleaned = cleaned.replace(
+		/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi,
+		""
+	);
+	cleaned = cleaned.replace(
+		/\b(id|type|props|styles|cells|backgroundColor|textColor|textAlignment):[^,]+,?/gi,
+		""
+	);
+	cleaned = cleaned.replace(/\s+/g, " ").trim();
+	return cleaned.length > 120 ? cleaned.slice(0, 117) + "…" : cleaned;
+};
 
 const WorkspaceSearch = () => {
 	const [searchTerm, setSearchTerm] = useState("");
-	const [results, setResults] = useState<
-		Pick<Tables<"pages">, "id" | "title" | "type">[]
-	>([]);
+	const [results, setResults] = useState<SearchHit[]>([]);
 	const [isFocused, setIsFocused] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
 	const searchContainerRef = useRef<HTMLDivElement>(null);
@@ -25,16 +61,16 @@ const WorkspaceSearch = () => {
 					data: { user },
 				} = await supabase.auth.getUser();
 				if (user) {
-					const { data, error } = await supabase
-						.from("pages")
-						.select("id, title, type")
-						.eq("user_id", user.id)
-						.ilike("title", `%${searchTerm}%`)
-						.is("trashed_at", null)
-						.limit(5);
+					const { data, error } = (await supabase.rpc(
+						"search_workspace" as any,
+						{
+							p_user_id: user.id,
+							p_query: searchTerm,
+						}
+					)) as unknown as { data: SearchHit[] | null; error: any };
 
 					if (error) {
-						console.error("Error searching pages:", error);
+						console.error("Error searching workspace:", error);
 						setResults([]);
 					} else {
 						setResults(data || []);
@@ -92,17 +128,26 @@ const WorkspaceSearch = () => {
 						</div>
 					) : results.length > 0 ? (
 						<ul className="py-1">
-							{results.map((page) => (
-								<li key={page.id}>
+							{results.map((hit) => (
+								<li key={hit.entity_id}>
 									<button
-										onClick={() => handleSelect(page.id)}
+										onClick={() => handleSelect(hit.page_id)}
 										className="w-full text-left flex items-center gap-3 px-3 py-2 hover:bg-muted"
 									>
-										<PageIcon
-											type={page.type}
-											className="h-5 w-5 text-muted-foreground flex-shrink-0"
-										/>
-										<span className="truncate">{page.title}</span>
+										<span className="text-muted-foreground flex-shrink-0">
+											{iconFor(hit.entity_type)}
+										</span>
+										<div className="flex flex-col text-left">
+											<span className="truncate font-medium">{hit.title}</span>
+											{hit.snippet && (
+												<span
+													className="text-xs text-muted-foreground truncate"
+													dangerouslySetInnerHTML={{
+														__html: cleanSnippet(hit.snippet),
+													}}
+												/>
+											)}
+										</div>
 									</button>
 								</li>
 							))}

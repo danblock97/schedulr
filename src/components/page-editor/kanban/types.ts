@@ -8,6 +8,23 @@ export type IssueType =
 	| "Security";
 export type Priority = "Low" | "Medium" | "High" | "Urgent";
 
+export interface Comment {
+	id: UniqueIdentifier;
+	authorId?: string;
+	authorEmail?: string;
+	authorName?: string;
+	text: string;
+	createdAt: string;
+}
+
+export interface Attachment {
+	id: string;
+	name: string;
+	url: string;
+	size: number;
+	mimeType: string;
+}
+
 export interface Task {
 	id: UniqueIdentifier;
 	columnId: UniqueIdentifier;
@@ -18,6 +35,10 @@ export interface Task {
 	startDate?: string;
 	endDate?: string;
 	priority?: Priority;
+	/** Optional list of comments left on this task */
+	comments?: Comment[];
+	/** Files attached to this task */
+	attachments?: Attachment[];
 	// content field is deprecated, will be migrated to summary
 	content?: string;
 }

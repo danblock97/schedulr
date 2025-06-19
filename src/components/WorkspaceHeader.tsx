@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/navigation-menu";
 import { Search, Sun, Moon, Settings, LogOut } from "lucide-react";
 import NotificationsBell from "@/components/notifications/NotificationsBell";
+import UpdateIndicator from "@/components/UpdateIndicator";
 import { supabase } from "@/integrations/supabase/client";
 import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
@@ -329,6 +330,7 @@ const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
 						)}
 					</Button>
 					{currentUser && <NotificationsBell user={currentUser} />}
+					{isElectron && <UpdateIndicator />}
 					{currentUser ? (
 						<DropdownMenu>
 							<DropdownMenuTrigger asChild>

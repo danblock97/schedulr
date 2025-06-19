@@ -1,14 +1,24 @@
-const { app, BrowserWindow, ipcMain, shell } = require("electron");
+const {
+	app,
+	BrowserWindow,
+	ipcMain,
+	shell,
+	globalShortcut,
+	Tray,
+	Menu,
+} = require("electron");
 const path = require("node:path");
 const { autoUpdater } = require("electron-updater");
 const isDev = require("electron-is-dev");
 
 let mainWindow;
 let installerWindow;
-const MIN_SPLASH_TIME = 5000; // ms
+const MIN_SPLASH_TIME = 3000; // ms
 let splashShownAt = 0;
 let pendingAuthTokens = null;
 const deeplinkScheme = "schedulr";
+let tray = null;
+const startHidden = process.argv.includes("--hidden");
 
 function createInstallerWindow() {
 	installerWindow = new BrowserWindow({
@@ -55,7 +65,9 @@ function createMainWindow() {
 	}
 
 	mainWindow.once("ready-to-show", () => {
-		mainWindow.show();
+		if (!startHidden) {
+			mainWindow.show();
+		}
 		if (pendingAuthTokens) {
 			mainWindow.webContents.send("supabase-login", pendingAuthTokens);
 			pendingAuthTokens = null;
@@ -64,6 +76,7 @@ function createMainWindow() {
 			installerWindow.close();
 			installerWindow = null;
 		}
+		createTray();
 	});
 
 	mainWindow.webContents.setWindowOpenHandler(({ url }) => {
@@ -90,6 +103,20 @@ app.whenReady().then(() => {
 		autoUpdater.autoDownload = true;
 		autoUpdater.checkForUpdates();
 	}
+
+	// Register global shortcut for Quick Add once the app is ready
+	const shortcut =
+		process.platform === "darwin"
+			? "Command+Shift+Space"
+			: "Control+Shift+Space";
+	globalShortcut.register(shortcut, () => {
+		if (mainWindow) {
+			if (mainWindow.isMinimized()) mainWindow.restore();
+			mainWindow.show();
+			mainWindow.focus();
+			mainWindow.webContents.send("global-quick-add");
+		}
+	});
 });
 
 autoUpdater.on("checking-for-update", () => {
@@ -106,7 +133,9 @@ autoUpdater.on("download-progress", () => {
 
 autoUpdater.on("update-downloaded", () => {
 	installerWindow?.webContents.send("update-status", "update-downloaded");
-	setTimeout(() => autoUpdater.quitAndInstall(), 1000);
+	if (mainWindow) {
+		mainWindow.webContents.send("update-status", "update-downloaded");
+	}
 });
 
 autoUpdater.on("update-not-available", () => {
@@ -140,6 +169,9 @@ ipcMain.on("window-action", (event, action) => {
 			break;
 		case "close":
 			win.close();
+			break;
+		case "hide":
+			win.hide();
 			break;
 	}
 });
@@ -200,4 +232,71 @@ app.on("second-instance", (event, argv) => {
 app.on("open-url", (event, url) => {
 	event.preventDefault();
 	handleAuthUrl(url);
+});
+
+app.on("will-quit", () => {
+	globalShortcut.unregisterAll();
+});
+
+function createTray() {
+	if (tray) return;
+	const iconPath = path.join(__dirname, "../public/images/logo-light.png");
+	tray = new Tray(iconPath);
+	const context = Menu.buildFromTemplate([
+		{
+			label: "Show Schedulr",
+			click: () => {
+				if (mainWindow) {
+					mainWindow.show();
+				}
+			},
+		},
+		{
+			label: "Quit",
+			click: () => {
+				app.quit();
+			},
+		},
+	]);
+	tray.setToolTip("Schedulr");
+	tray.setContextMenu(context);
+	// Left click (single) to show the window
+	tray.on("click", () => {
+		if (mainWindow) {
+			mainWindow.show();
+			mainWindow.focus();
+		}
+	});
+	// Double-click as fallback
+	tray.on("double-click", () => {
+		if (mainWindow) {
+			mainWindow.show();
+			mainWindow.focus();
+		}
+	});
+}
+
+ipcMain.handle("set-startup", (_e, { enabled, hidden }) => {
+	const settings = {
+		openAtLogin: !!enabled,
+	};
+	if (process.platform === "darwin") {
+		settings.openAsHidden = !!hidden;
+	} else {
+		settings.args = hidden ? ["--hidden"] : [];
+	}
+	app.setLoginItemSettings(settings);
+	return app.getLoginItemSettings();
+});
+
+ipcMain.handle("get-startup", () => {
+	const s = app.getLoginItemSettings();
+	return {
+		enabled: s.openAtLogin,
+		hidden: s.args ? s.args.includes("--hidden") : s.openAsHidden,
+	};
+});
+
+ipcMain.handle("install-update", () => {
+	autoUpdater.quitAndInstall();
 });
