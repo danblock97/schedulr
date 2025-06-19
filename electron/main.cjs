@@ -177,7 +177,7 @@ ipcMain.on("window-action", (event, action) => {
 });
 
 app.on("window-all-closed", () => {
-	if (process.platform !== "darwin") {
+	if (process.platform !== "darwin" && !isDev) {
 		app.quit();
 	}
 });
@@ -207,8 +207,11 @@ function handleAuthUrl(deepLink) {
 	}
 }
 
-// ensure single instance and protocol client
-if (!app.requestSingleInstanceLock()) {
+// Don't enforce single-instance behaviour in development – when
+// dev-servers or hot-reloaders restart Electron quickly the previous
+// instance might not have released its lock yet, causing the new one to
+// exit immediately. We still keep the check for production builds.
+if (!isDev && !app.requestSingleInstanceLock()) {
 	app.quit();
 }
 
