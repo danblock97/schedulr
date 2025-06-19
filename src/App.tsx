@@ -109,8 +109,19 @@ const App = () => {
 					return (
 						<Router>
 							<Routes>
-								{/* Desktop build: skip marketing homepage */}
-								{isElectron && <Route path="/" element={<DesktopHome />} />}
+								{/* Desktop build: skip marketing homepage but keep info pages */}
+								{isElectron && (
+									<>
+										<Route path="/" element={<DesktopHome />} />
+										<Route element={<PageLayout />}>
+											<Route path="/pricing" element={<PricingPage />} />
+											<Route path="/contact" element={<ContactPage />} />
+											<Route path="/terms" element={<TermsOfServicePage />} />
+											<Route path="/privacy" element={<PrivacyPolicyPage />} />
+											<Route path="/changelog" element={<ChangelogPage />} />
+										</Route>
+									</>
+								)}
 
 								{/* Web build: marketing pages */}
 								{!isElectron && (

@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { CHANGELOG } from "@/pages/ChangelogPage";
 import useIsElectron from "@/hooks/useIsElectron";
 import { Link } from "react-router-dom";
+import { Sparkles } from "lucide-react";
 
 const STORAGE_KEY = "schedulr_last_seen_version";
 
@@ -39,6 +40,11 @@ const DesktopChangelogDialog: React.FC = () => {
 	if (!isElectron) return null;
 
 	const latest = CHANGELOG[0];
+	// Extract the first real change item (prefixed with "- ") for concise display
+	const firstChange =
+		latest.changes
+			.find((c) => c.trim().startsWith("-"))
+			?.replace(/^\-\s*/, "") ?? "";
 	const imageSrc = `${import.meta.env.BASE_URL}images/changelog-image.png`;
 
 	return (
@@ -49,23 +55,33 @@ const DesktopChangelogDialog: React.FC = () => {
 					alt="Changelog banner"
 					className="w-full h-48 object-cover"
 				/>
-				<div className="p-6 space-y-4">
-					<DialogHeader>
-						<DialogTitle>What's new in v{latest.version}</DialogTitle>
+				<div className="p-6 space-y-5">
+					<DialogHeader className="space-y-2">
+						<div className="inline-flex items-center gap-2 text-primary">
+							<Sparkles className="h-5 w-5" />
+							<DialogTitle className="text-lg">
+								What's new in v{latest.version}
+							</DialogTitle>
+						</div>
 						<DialogDescription>{latest.summary}</DialogDescription>
 					</DialogHeader>
 
-					<ul className="list-disc list-inside space-y-2">
-						{latest.changes.map((c, idx) => (
-							<li key={idx}>{c}</li>
-						))}
-					</ul>
+					<div className="bg-muted/20 dark:bg-muted/10 rounded-md p-4">
+						<p className="leading-relaxed">{firstChange}</p>
+					</div>
 
-					<DialogFooter className="pt-4">
-						<Button asChild variant="outline" onClick={handleClose}>
+					<DialogFooter className="pt-4 flex-col gap-2 sm:flex-row sm:justify-end">
+						<Button
+							asChild
+							variant="outline"
+							className="w-full sm:w-auto"
+							onClick={handleClose}
+						>
 							<Link to="/changelog">View Full Changelog</Link>
 						</Button>
-						<Button onClick={handleClose}>Close</Button>
+						<Button className="w-full sm:w-auto" onClick={handleClose}>
+							Got it!
+						</Button>
 					</DialogFooter>
 				</div>
 			</DialogContent>
