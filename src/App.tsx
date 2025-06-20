@@ -24,6 +24,7 @@ import useDesktopDeepLink from "@/hooks/useDesktopDeepLink";
 import ChangelogPage from "./pages/ChangelogPage";
 import DesktopChangelogDialog from "@/components/dialogs/DesktopChangelogDialog";
 import DesktopQuickAddDialog from "@/components/dialogs/DesktopQuickAddDialog";
+import DesktopHome from "./pages/DesktopHome";
 
 const queryClient = new QueryClient();
 
@@ -94,6 +95,8 @@ const App = () => {
 		};
 	}, []);
 
+	const isElectron = (window as any).electron?.isElectron;
+
 	return (
 		<QueryClientProvider client={queryClient}>
 			<TooltipProvider>
@@ -106,14 +109,31 @@ const App = () => {
 					return (
 						<Router>
 							<Routes>
-								<Route element={<PageLayout />}>
-									<Route path="/" element={<WelcomePage />} />
-									<Route path="/pricing" element={<PricingPage />} />
-									<Route path="/contact" element={<ContactPage />} />
-									<Route path="/terms" element={<TermsOfServicePage />} />
-									<Route path="/privacy" element={<PrivacyPolicyPage />} />
-									<Route path="/changelog" element={<ChangelogPage />} />
-								</Route>
+								{/* Desktop build: skip marketing homepage but keep info pages */}
+								{isElectron && (
+									<>
+										<Route path="/" element={<DesktopHome />} />
+										<Route element={<PageLayout />}>
+											<Route path="/pricing" element={<PricingPage />} />
+											<Route path="/contact" element={<ContactPage />} />
+											<Route path="/terms" element={<TermsOfServicePage />} />
+											<Route path="/privacy" element={<PrivacyPolicyPage />} />
+											<Route path="/changelog" element={<ChangelogPage />} />
+										</Route>
+									</>
+								)}
+
+								{/* Web build: marketing pages */}
+								{!isElectron && (
+									<Route element={<PageLayout />}>
+										<Route path="/" element={<WelcomePage />} />
+										<Route path="/pricing" element={<PricingPage />} />
+										<Route path="/contact" element={<ContactPage />} />
+										<Route path="/terms" element={<TermsOfServicePage />} />
+										<Route path="/privacy" element={<PrivacyPolicyPage />} />
+										<Route path="/changelog" element={<ChangelogPage />} />
+									</Route>
+								)}
 
 								<Route path="/auth" element={<AuthPage />} />
 

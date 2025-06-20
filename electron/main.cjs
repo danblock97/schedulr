@@ -10,10 +10,11 @@ const {
 const path = require("node:path");
 const { autoUpdater } = require("electron-updater");
 const isDev = require("electron-is-dev");
+const windowStateKeeper = require("electron-window-state");
 
 let mainWindow;
 let installerWindow;
-const MIN_SPLASH_TIME = 3000; // ms
+const MIN_SPLASH_TIME = 500; // ms
 let splashShownAt = 0;
 let pendingAuthTokens = null;
 const deeplinkScheme = "schedulr";
@@ -21,9 +22,18 @@ let tray = null;
 const startHidden = process.argv.includes("--hidden");
 
 function createInstallerWindow() {
+	// Load the previous state with fallback to defaults
+	const installerWindowState = windowStateKeeper({
+		defaultWidth: 450,
+		defaultHeight: 600,
+		path: path.join(app.getPath("userData"), "window-state-installer.json"),
+	});
+
 	installerWindow = new BrowserWindow({
-		width: 450,
-		height: 600,
+		width: installerWindowState.width,
+		height: installerWindowState.height,
+		x: installerWindowState.x,
+		y: installerWindowState.y,
 		resizable: false,
 		show: false,
 		frame: false,
@@ -36,15 +46,28 @@ function createInstallerWindow() {
 		},
 	});
 
+	// Let us register listeners on the window, so we can update the state
+	// automatically (the listeners will be removed when the window is closed)
+	installerWindowState.manage(installerWindow);
+
 	installerWindow.loadFile(path.join(__dirname, "installer.html"));
 	installerWindow.once("ready-to-show", () => installerWindow.show());
 	splashShownAt = Date.now();
 }
 
 function createMainWindow() {
+	// Load the previous state with fallback to defaults
+	const mainWindowState = windowStateKeeper({
+		defaultWidth: 1920,
+		defaultHeight: 1080,
+		path: path.join(app.getPath("userData"), "window-state-main.json"),
+	});
+
 	mainWindow = new BrowserWindow({
-		width: 1920,
-		height: 1080,
+		width: mainWindowState.width,
+		height: mainWindowState.height,
+		x: mainWindowState.x,
+		y: mainWindowState.y,
 		minWidth: 1280,
 		minHeight: 720,
 		frame: false,
@@ -56,6 +79,11 @@ function createMainWindow() {
 			contextIsolation: true,
 		},
 	});
+
+	// Let us register listeners on the window, so we can update the state
+	// automatically (the listeners will be removed when the window is closed)
+	// and restore the maximized or full screen state
+	mainWindowState.manage(mainWindow);
 
 	if (isDev) {
 		mainWindow.loadURL("http://localhost:8080");
@@ -95,13 +123,23 @@ function showMainWindowWhenReady() {
 }
 
 app.whenReady().then(() => {
-	createInstallerWindow();
-
-	if (isDev) {
-		showMainWindowWhenReady();
+	// If starting hidden, skip installer window and go straight to main window
+	if (startHidden) {
+		createMainWindow();
+		// Still set up auto-updater for hidden startup
+		if (!isDev) {
+			autoUpdater.autoDownload = true;
+			autoUpdater.checkForUpdates();
+		}
 	} else {
-		autoUpdater.autoDownload = true;
-		autoUpdater.checkForUpdates();
+		createInstallerWindow();
+
+		if (isDev) {
+			showMainWindowWhenReady();
+		} else {
+			autoUpdater.autoDownload = true;
+			autoUpdater.checkForUpdates();
+		}
 	}
 
 	// Register global shortcut for Quick Add once the app is ready
@@ -140,13 +178,27 @@ autoUpdater.on("update-downloaded", () => {
 
 autoUpdater.on("update-not-available", () => {
 	installerWindow?.webContents.send("update-status", "up-to-date");
-	showMainWindowWhenReady();
+	if (startHidden) {
+		// If starting hidden, main window should already be created
+		if (!mainWindow) {
+			createMainWindow();
+		}
+	} else {
+		showMainWindowWhenReady();
+	}
 });
 
 autoUpdater.on("error", (err) => {
 	console.error(err);
 	installerWindow?.webContents.send("update-status", "error");
-	showMainWindowWhenReady();
+	if (startHidden) {
+		// If starting hidden, main window should already be created
+		if (!mainWindow) {
+			createMainWindow();
+		}
+	} else {
+		showMainWindowWhenReady();
+	}
 });
 
 ipcMain.on("open-external", (_event, url) => {
@@ -177,7 +229,7 @@ ipcMain.on("window-action", (event, action) => {
 });
 
 app.on("window-all-closed", () => {
-	if (process.platform !== "darwin") {
+	if (process.platform !== "darwin" && !isDev) {
 		app.quit();
 	}
 });
@@ -207,8 +259,11 @@ function handleAuthUrl(deepLink) {
 	}
 }
 
-// ensure single instance and protocol client
-if (!app.requestSingleInstanceLock()) {
+// Don't enforce single-instance behaviour in development – when
+// dev-servers or hot-reloaders restart Electron quickly the previous
+// instance might not have released its lock yet, causing the new one to
+// exit immediately. We still keep the check for production builds.
+if (!isDev && !app.requestSingleInstanceLock()) {
 	app.quit();
 }
 

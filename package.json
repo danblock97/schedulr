@@ -1,7 +1,7 @@
 {
 	"name": "vite_react_shadcn_ts",
 	"private": true,
-	"version": "1.0.4",
+	"version": "1.0.5",
 	"type": "module",
 	"main": "electron/main.cjs",
 	"description": "Schedulr – connected workspace and desktop app",
@@ -66,6 +66,7 @@
 		"date-fns": "^3.6.0",
 		"electron-is-dev": "^2.0.0",
 		"electron-updater": "^6.1.7",
+		"electron-window-state": "^5.0.3",
 		"embla-carousel-react": "^8.3.0",
 		"framer-motion": "^12.18.1",
 		"input-otp": "^1.2.4",
@@ -136,7 +137,7 @@
 		],
 		"artifactName": "scheduler-${version}.${ext}",
 		"win": {
-			"icon": "public/images/logo-light.png"
+			"icon": "public/images/logo-dark.png"
 		}
 	}
 }
