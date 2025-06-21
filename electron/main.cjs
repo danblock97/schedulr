@@ -19,7 +19,20 @@ let splashShownAt = 0;
 let pendingAuthTokens = null;
 const deeplinkScheme = "schedulr";
 let tray = null;
-const startHidden = process.argv.includes("--hidden");
+// Detect if the app was started with the "--hidden" flag, taking into account
+// the extra arguments that Squirrel/Update.exe adds on Windows. When Windows
+// launches an app at login via Update.exe, the arguments look like:
+//   Update.exe --processStart "Schedulr.exe" --process-start-args "--hidden"
+// which means "--hidden" is *inside* the value that follows
+// "--process-start-args".  To reliably detect hidden-startup we therefore need
+// to check both the direct presence of "--hidden" **and** whether it appears
+// inside the process-start-args string.
+const startHidden =
+	process.argv.includes("--hidden") ||
+	(process.argv.includes("--process-start-args") &&
+		process.argv
+			.slice(process.argv.indexOf("--process-start-args") + 1)
+			.some((arg) => arg.includes("--hidden")));
 
 function createInstallerWindow() {
 	// Load the previous state with fallback to defaults
@@ -331,24 +344,59 @@ function createTray() {
 	});
 }
 
+// ---------------------------------------------------------------------------
+// Auto-start configuration
+// ---------------------------------------------------------------------------
 ipcMain.handle("set-startup", (_e, { enabled, hidden }) => {
+	// Base options that work cross-platform
 	const settings = {
 		openAtLogin: !!enabled,
 	};
+
 	if (process.platform === "darwin") {
+		// macOS can simply toggle visibility via `openAsHidden`
 		settings.openAsHidden = !!hidden;
+	} else if (process.platform === "win32") {
+		// Windows (Squirrel) requires launching via Update.exe so we need to
+		// specify the correct executable and arguments.  Failing to do so causes
+		// Windows to start the bare Electron runtime which shows the default
+		// Electron documentation window.
+
+		// Path to the Squirrel helper that lives next to our app executable
+		const updateExe = path.join(
+			path.dirname(process.execPath),
+			"..",
+			"Update.exe"
+		);
+
+		const exeName = path.basename(process.execPath);
+
+		settings.path = updateExe;
+		settings.args = [
+			"--processStart",
+			exeName,
+			...(hidden ? ["--process-start-args", "--hidden"] : []),
+		];
 	} else {
+		// Linux & others – just forward the flag
 		settings.args = hidden ? ["--hidden"] : [];
 	}
+
 	app.setLoginItemSettings(settings);
 	return app.getLoginItemSettings();
 });
 
 ipcMain.handle("get-startup", () => {
 	const s = app.getLoginItemSettings();
+
+	// Determine whether the hidden flag is present in any of the stored args
+	const hasHidden = Array.isArray(s.args)
+		? s.args.some((a) => a.includes("--hidden"))
+		: s.openAsHidden;
+
 	return {
 		enabled: s.openAtLogin,
-		hidden: s.args ? s.args.includes("--hidden") : s.openAsHidden,
+		hidden: hasHidden,
 	};
 });
 
