@@ -1,7 +1,7 @@
 {
 	"name": "vite_react_shadcn_ts",
 	"private": true,
-	"version": "1.0.5",
+	"version": "1.0.6",
 	"type": "module",
 	"main": "electron/main.cjs",
 	"description": "Schedulr – connected workspace and desktop app",
@@ -137,7 +137,7 @@
 		],
 		"artifactName": "scheduler-${version}.${ext}",
 		"win": {
-			"icon": "public/images/logo-dark.png"
+			"icon": "public/images/logo-light.png"
 		}
 	}
 }
