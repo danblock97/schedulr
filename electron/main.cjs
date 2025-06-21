@@ -185,6 +185,32 @@ app.whenReady().then(() => {
 			mainWindow.webContents.send("global-quick-add");
 		}
 	});
+
+	// ---------------------------------------------------------------------------
+	// Guard against stray "default Electron" windows
+	// ---------------------------------------------------------------------------
+	// In some edge-cases (particularly around auto-launch on Windows) the OS may
+	// spawn an additional bare Electron process that opens Electron's default
+	// documentation page.  If that process survives long enough for our code to
+	// run, it appears as an extra BrowserWindow alongside the real app.  The
+	// following listener detects such windows and closes them immediately so the
+	// user never sees them.
+
+	app.on("browser-window-created", (_event, window) => {
+		const wc = window.webContents;
+		// We only want to run the check once the first page has loaded.
+		wc.once("did-finish-load", () => {
+			const url = wc.getURL();
+			// Electron's default page lives on electronjs.org – close those.
+			if (
+				url.startsWith("https://www.electronjs.org") ||
+				url.includes("electronjs.org/docs")
+			) {
+				console.warn("Closing unexpected Electron documentation window: ", url);
+				window.close();
+			}
+		});
+	});
 });
 
 function clearUpdateTimeout() {
