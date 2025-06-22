@@ -17,9 +17,31 @@ export const CHANGELOG: ChangelogEntry[] = [
 		date: new Date().toISOString().split("T")[0],
 		summary: "Latest improvements and fixes.",
 		changes: [
+			"- Fix installer taking a while to install",
+			"- Electron documentation window also loads with main app window when the app boots from pc start-up",
+			"- Task description textarea does not allow for spellcheck via right click to fix mistakes",
+			"- Desktop custom horizontal scrollbar needs adding",
+		],
+	},
+
+	{
+		version: "1.0.6",
+		date: "2025-06-21",
+		summary: "Latest improvements and fixes.",
+		changes: [
+			"- App shows electron window with app on startup which shouldn't happen (see attached image)",
+			"- App logo changed back to light",
+		],
+	},
+	{
+		version: "1.0.5",
+		date: "2025-06-20",
+		summary: "Latest improvements and fixes.",
+		changes: [
 			"- Format changelog modal better also only show the most recent change on modal",
+			"- Installer logo changed to dark logo for better UI",
 			"- Add old updates to bigger changelog",
-			"- Fixed an issue where Desktop App shows electron window with app on startup which shouldn't happen (see attached image)",
+			"- App shows electron window with app on startup which shouldn't happen (see attached image)",
 		],
 	},
 	{
