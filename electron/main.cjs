@@ -15,6 +15,7 @@ const windowStateKeeper = require("electron-window-state");
 let mainWindow;
 let installerWindow;
 const MIN_SPLASH_TIME = 500; // ms
+const UPDATE_CHECK_TIMEOUT = 20_000; // ms – 20 seconds
 let splashShownAt = 0;
 let pendingAuthTokens = null;
 const deeplinkScheme = "schedulr";
@@ -90,6 +91,7 @@ function createMainWindow() {
 		webPreferences: {
 			preload: path.join(__dirname, "preload.cjs"),
 			contextIsolation: true,
+			spellcheck: true,
 		},
 	});
 
@@ -153,6 +155,22 @@ app.whenReady().then(() => {
 			autoUpdater.autoDownload = true;
 			autoUpdater.checkForUpdates();
 		}
+
+		// ------------------------------------------------------------------
+		// Fallback: If the updater takes too long (e.g. network offline or the
+		// GitHub request hangs) make sure we still present the application to the
+		// user instead of leaving them on the splash screen indefinitely.
+		// ------------------------------------------------------------------
+		if (!startHidden) {
+			global.updateTimeout = setTimeout(() => {
+				if (!mainWindow) {
+					console.warn(
+						"Auto-update check timed out – launching main window without result"
+					);
+					showMainWindowWhenReady();
+				}
+			}, UPDATE_CHECK_TIMEOUT);
+		}
 	}
 
 	// Register global shortcut for Quick Add once the app is ready
@@ -168,7 +186,40 @@ app.whenReady().then(() => {
 			mainWindow.webContents.send("global-quick-add");
 		}
 	});
+
+	// ---------------------------------------------------------------------------
+	// Guard against stray "default Electron" windows
+	// ---------------------------------------------------------------------------
+	// In some edge-cases (particularly around auto-launch on Windows) the OS may
+	// spawn an additional bare Electron process that opens Electron's default
+	// documentation page.  If that process survives long enough for our code to
+	// run, it appears as an extra BrowserWindow alongside the real app.  The
+	// following listener detects such windows and closes them immediately so the
+	// user never sees them.
+
+	app.on("browser-window-created", (_event, window) => {
+		const wc = window.webContents;
+		// We only want to run the check once the first page has loaded.
+		wc.once("did-finish-load", () => {
+			const url = wc.getURL();
+			// Electron's default page lives on electronjs.org – close those.
+			if (
+				url.startsWith("https://www.electronjs.org") ||
+				url.includes("electronjs.org/docs")
+			) {
+				console.warn("Closing unexpected Electron documentation window: ", url);
+				window.close();
+			}
+		});
+	});
 });
+
+function clearUpdateTimeout() {
+	if (global.updateTimeout) {
+		clearTimeout(global.updateTimeout);
+		global.updateTimeout = undefined;
+	}
+}
 
 autoUpdater.on("checking-for-update", () => {
 	installerWindow?.webContents.send("update-status", "checking");
@@ -176,6 +227,9 @@ autoUpdater.on("checking-for-update", () => {
 
 autoUpdater.on("update-available", () => {
 	installerWindow?.webContents.send("update-status", "update-available");
+	// We intentionally keep the timeout running here – if the download takes
+	// too long the watchdog will still fire and launch the main window to
+	// avoid locking the user out of the application.
 });
 
 autoUpdater.on("download-progress", () => {
@@ -187,10 +241,12 @@ autoUpdater.on("update-downloaded", () => {
 	if (mainWindow) {
 		mainWindow.webContents.send("update-status", "update-downloaded");
 	}
+	clearUpdateTimeout();
 });
 
 autoUpdater.on("update-not-available", () => {
 	installerWindow?.webContents.send("update-status", "up-to-date");
+	clearUpdateTimeout();
 	if (startHidden) {
 		// If starting hidden, main window should already be created
 		if (!mainWindow) {
@@ -204,6 +260,7 @@ autoUpdater.on("update-not-available", () => {
 autoUpdater.on("error", (err) => {
 	console.error(err);
 	installerWindow?.webContents.send("update-status", "error");
+	clearUpdateTimeout();
 	if (startHidden) {
 		// If starting hidden, main window should already be created
 		if (!mainWindow) {
