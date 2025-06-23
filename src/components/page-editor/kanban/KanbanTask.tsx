@@ -119,7 +119,7 @@ const KanbanTask: React.FC<KanbanTaskProps> = ({
 			</AlertDialog>
 
 			<Card
-				className={`group transition-shadow duration-200 shadow-sm cursor-pointer bg-card/50 border border-transparent hover:border-border/80 text-card-foreground ${
+				className={`group transition-shadow duration-200 shadow-sm cursor-pointer bg-card/50 dark:bg-gradient-to-b dark:from-neutral-800/80 dark:to-neutral-900/80 border border-transparent hover:border-border/80 text-card-foreground ${
 					isOverlay ? "ring-2 ring-primary" : ""
 				}`}
 				onClick={handleEdit}

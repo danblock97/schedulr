@@ -76,7 +76,7 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
 			<div
 				ref={setNodeRef}
 				style={style}
-				className="w-[90vw] sm:w-[350px] h-[500px] bg-muted rounded-lg flex flex-col"
+				className="w-[90vw] sm:w-[350px] h-[500px] rounded-lg flex flex-col border bg-background/70 dark:bg-gradient-to-b dark:from-neutral-900 dark:to-neutral-950 dark:border-neutral-700/60"
 			></div>
 		);
 	}
@@ -85,7 +85,7 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
 		<div
 			ref={setNodeRef}
 			style={style}
-			className={`w-[90vw] sm:w-[350px] flex-shrink-0 h-fit max-h-[calc(100vh-120px)] flex flex-col ${
+			className={`w-[90vw] sm:w-[350px] flex-shrink-0 h-fit max-h-[calc(100vh-120px)] flex flex-col border shadow-sm bg-background/70 dark:bg-gradient-to-b dark:from-neutral-900 dark:to-neutral-950 dark:border-neutral-700/60 dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.04),0_2px_4px_rgba(0,0,0,0.7)] rounded-lg ${
 				isOverlay ? "ring-2 ring-primary" : ""
 			}`}
 		>
@@ -109,7 +109,7 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
 			<div
 				{...attributes}
 				{...listeners}
-				className="p-3 flex items-center justify-between cursor-grab text-muted-foreground"
+				className="p-3 flex items-center justify-between cursor-grab text-muted-foreground bg-background/60 dark:bg-neutral-900/80 border-b dark:border-neutral-700/60 rounded-t-lg"
 				onDoubleClick={() => setIsEditingTitle(true)}
 			>
 				<div className="flex items-center gap-2 flex-grow min-w-0">

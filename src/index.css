@@ -105,6 +105,23 @@
 	.bn-grid-suggestion-menu {
 		z-index: 1000 !important;
 	}
+
+	/* 3D embossed global background */
+	body::before {
+		content: "";
+		position: fixed;
+		inset: 0;
+		z-index: -1;
+		pointer-events: none;
+		background-image: linear-gradient(
+			180deg,
+			#111 0%,
+			#1e1e1e 35%,
+			#242424 100%
+		);
+		/* radial vignette for depth */
+		background-blend-mode: overlay;
+	}
 }
 
 @layer base {

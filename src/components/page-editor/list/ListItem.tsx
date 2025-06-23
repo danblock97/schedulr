@@ -58,7 +58,7 @@ const ListItem: React.FC<ListItemProps> = ({ item, onUpdate, onDelete }) => {
 			initial={{ opacity: 0 }}
 			animate={{ opacity: 1 }}
 			exit={{ opacity: 0, x: -20, transition: { duration: 0.2 } }}
-			className="group border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted"
+			className="group border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted dark:bg-gradient-to-b dark:from-neutral-800 dark:to-neutral-900 dark:border-b-neutral-700/60"
 		>
 			<TableCell className="w-12 px-2">
 				<Button

@@ -82,38 +82,36 @@ const MyTasks: React.FC<MyTasksProps> = ({ userId }) => {
 					{!isLoading &&
 						!isError &&
 						(tasks && tasks.length > 0 ? (
-							<ul className="space-y-3">
-								{tasks.map((task) => (
-									<li key={task.id}>
-										<Link
-											to={`/workspace/page/${task.pageId}`}
-											className="block p-3 rounded-md hover:bg-muted/40 transition-colors"
-										>
-											<div className="flex justify-between items-center">
-												<div>
-													<p className="font-medium">
-														{task.text || "Untitled Task"}
-													</p>
-													<p className="text-sm text-muted-foreground">
-														In list:{" "}
-														<span className="font-semibold">
-															{task.pageTitle}
-														</span>
-													</p>
-												</div>
-												<div className="text-right flex items-center gap-2">
-													{task.dueDate && (
-														<p className="text-sm text-muted-foreground">
-															{format(new Date(task.dueDate), "MMM d")}
-														</p>
-													)}
-													<ArrowRight className="h-4 w-4 text-muted-foreground" />
-												</div>
-											</div>
-										</Link>
-									</li>
-								))}
-							</ul>
+							<div className="w-full">
+								{/* Table header */}
+								<div className="grid grid-cols-12 px-3 pb-2 text-xs font-semibold text-muted-foreground uppercase">
+									<span className="col-span-6">Task Name</span>
+									<span className="col-span-4">List</span>
+									<span className="col-span-2 text-right">Due</span>
+								</div>
+								<ul className="divide-y divide-border">
+									{tasks.map((task) => (
+										<li key={task.id} className="py-2 first:pt-0 last:pb-0">
+											<Link
+												to={`/workspace/page/${task.pageId}`}
+												className="grid grid-cols-12 items-center px-3 py-1 rounded-md hover:bg-muted/40 transition-colors"
+											>
+												<span className="col-span-6 truncate font-medium">
+													{task.text || "Untitled Task"}
+												</span>
+												<span className="col-span-4 truncate text-sm text-muted-foreground">
+													{task.pageTitle}
+												</span>
+												<span className="col-span-2 flex items-center justify-end gap-2 text-sm text-muted-foreground">
+													{task.dueDate &&
+														format(new Date(task.dueDate), "MMM d")}
+													<ArrowRight className="h-4 w-4" />
+												</span>
+											</Link>
+										</li>
+									))}
+								</ul>
+							</div>
 						) : (
 							<div className="text-center text-muted-foreground py-4">
 								<p>You have no upcoming tasks.</p>
