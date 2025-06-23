@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useLocation } from "react-router-dom";
 import {
 	Sidebar,
 	SidebarHeader,
@@ -33,6 +33,7 @@ import {
 	Calendar,
 	ListTodo,
 	Briefcase,
+	LifeBuoy,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -44,6 +45,12 @@ import TemplateSelectionDialog, {
 } from "./dialogs/TemplateSelectionDialog";
 import Logo from "@/components/Logo";
 import { useIsMobile } from "@/hooks/use-mobile";
+import SettingsDialog from "@/components/settings/SettingsDialog";
+import ContactDialog from "@/components/dialogs/ContactDialog";
+import type { User } from "@supabase/supabase-js";
+import type { Tables } from "@/integrations/supabase/types";
+import { useQuery } from "@tanstack/react-query";
+import PageIcon from "@/components/dashboard/PageIcon";
 
 const AppSidebar = () => {
 	const navigate = useNavigate();
@@ -54,6 +61,55 @@ const AppSidebar = () => {
 	}>({ isOpen: false, pageType: null });
 
 	const isMobile = useIsMobile();
+
+	// Settings dialog state and auth data
+	const [showSettings, setShowSettings] = useState(false);
+	const [showContact, setShowContact] = useState(false);
+	const [currentUser, setCurrentUser] = useState<User | null>(null);
+	const [profile, setProfile] = useState<Tables<"profiles"> | null>(null);
+
+	const location = useLocation();
+
+	// Fetch user's pages
+	const { data: privatePages } = useQuery({
+		queryKey: ["sidebar_pages", currentUser?.id],
+		enabled: !!currentUser?.id,
+		queryFn: async () => {
+			const { data, error } = await supabase
+				.from("pages")
+				.select("id,title,type")
+				.eq("user_id", currentUser!.id)
+				.is("trashed_at", null)
+				.order("last_modified_at", { ascending: false });
+			if (error) throw error;
+			return data as { id: string; title: string | null; type: string }[];
+		},
+	});
+
+	// Determine active sidebar menu
+	const searchParams = new URLSearchParams(location.search);
+	const viewParam = searchParams.get("view");
+	const isDashboardActive = location.pathname === "/workspace" && !viewParam;
+	const isPagesActive = viewParam === "pages";
+	const isTrashActive = viewParam === "trash";
+
+	useEffect(() => {
+		const fetchAuth = async () => {
+			const {
+				data: { user },
+			} = await supabase.auth.getUser();
+			setCurrentUser(user);
+			if (user) {
+				const { data } = await supabase
+					.from("profiles")
+					.select("*")
+					.eq("id", user.id)
+					.single();
+				setProfile(data);
+			}
+		};
+		fetchAuth();
+	}, []);
 
 	const handleCreatePageFromTemplate = async (
 		title: string,
@@ -176,7 +232,11 @@ const AppSidebar = () => {
 							</SidebarGroupLabel>
 							<SidebarMenu>
 								<SidebarMenuItem>
-									<SidebarMenuButton asChild tooltip="Dashboard">
+									<SidebarMenuButton
+										asChild
+										tooltip="Dashboard"
+										isActive={isDashboardActive}
+									>
 										<Link to="/workspace">
 											<Home className="h-5 w-5" />
 											<span className="group-data-[collapsible=icon]:hidden">
@@ -186,7 +246,11 @@ const AppSidebar = () => {
 									</SidebarMenuButton>
 								</SidebarMenuItem>
 								<SidebarMenuItem>
-									<SidebarMenuButton asChild tooltip="All Pages">
+									<SidebarMenuButton
+										asChild
+										tooltip="All Pages"
+										isActive={isPagesActive}
+									>
 										<Link to="/workspace?view=pages">
 											<FileText className="h-5 w-5" />
 											<span className="group-data-[collapsible=icon]:hidden">
@@ -196,7 +260,11 @@ const AppSidebar = () => {
 									</SidebarMenuButton>
 								</SidebarMenuItem>
 								<SidebarMenuItem>
-									<SidebarMenuButton asChild tooltip="Trash">
+									<SidebarMenuButton
+										asChild
+										tooltip="Trash"
+										isActive={isTrashActive}
+									>
 										<Link to="/workspace?view=trash">
 											<Trash2 className="h-5 w-5" />
 											<span className="group-data-[collapsible=icon]:hidden">
@@ -207,19 +275,61 @@ const AppSidebar = () => {
 								</SidebarMenuItem>
 							</SidebarMenu>
 						</SidebarGroup>
+						{privatePages && privatePages.length > 0 && (
+							<SidebarGroup className="mt-4">
+								<SidebarGroupLabel className="group-data-[collapsible=icon]:hidden">
+									Private
+								</SidebarGroupLabel>
+								<SidebarMenu>
+									{privatePages.map((page) => (
+										<SidebarMenuItem key={page.id}>
+											<SidebarMenuButton
+												asChild
+												tooltip={page.title || "Untitled"}
+												isActive={
+													location.pathname === `/workspace/page/${page.id}`
+												}
+											>
+												<Link to={`/workspace/page/${page.id}`}>
+													<PageIcon
+														type={page.type as any}
+														className="h-5 w-5"
+													/>
+													<span className="group-data-[collapsible=icon]:hidden truncate">
+														{page.title || "Untitled"}
+													</span>
+												</Link>
+											</SidebarMenuButton>
+										</SidebarMenuItem>
+									))}
+								</SidebarMenu>
+							</SidebarGroup>
+						)}
 					</ScrollArea>
 				</SidebarContent>
 				<SidebarSeparator />
 				<SidebarFooter className="p-2">
 					<SidebarMenu>
 						<SidebarMenuItem>
-							<SidebarMenuButton asChild tooltip="Settings">
-								<Link to="/settings">
-									<Settings className="h-5 w-5" />
-									<span className="group-data-[collapsible=icon]:hidden">
-										Settings
-									</span>
-								</Link>
+							<SidebarMenuButton
+								onClick={() => setShowSettings(true)}
+								tooltip="Settings"
+							>
+								<Settings className="h-5 w-5" />
+								<span className="group-data-[collapsible=icon]:hidden">
+									Settings
+								</span>
+							</SidebarMenuButton>
+						</SidebarMenuItem>
+						<SidebarMenuItem>
+							<SidebarMenuButton
+								onClick={() => setShowContact(true)}
+								tooltip="Help Center"
+							>
+								<LifeBuoy className="h-5 w-5" />
+								<span className="group-data-[collapsible=icon]:hidden">
+									Help Center
+								</span>
 							</SidebarMenuButton>
 						</SidebarMenuItem>
 						<SidebarMenuItem>
@@ -243,6 +353,14 @@ const AppSidebar = () => {
 					onCreate={handleCreatePageFromTemplate}
 				/>
 			)}
+			{/* Settings modal */}
+			<SettingsDialog
+				open={showSettings}
+				onOpenChange={setShowSettings}
+				user={currentUser}
+				profile={profile}
+			/>
+			<ContactDialog open={showContact} onOpenChange={setShowContact} />
 		</>
 	);
 };

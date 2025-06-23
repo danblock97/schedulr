@@ -17,9 +17,10 @@ import {
 	NavigationMenuList,
 	navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
-import { Search, Sun, Moon, Settings, LogOut } from "lucide-react";
+import { Search, Sun, Moon, Settings, LogOut, LifeBuoy } from "lucide-react";
 import NotificationsBell from "@/components/notifications/NotificationsBell";
 import UpdateIndicator from "@/components/UpdateIndicator";
+import ContactDialog from "@/components/dialogs/ContactDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
@@ -73,6 +74,7 @@ const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
 		Pick<Tables<"pages">, "id" | "title" | "type">[]
 	>([]);
 	const [isSearchFocused, setIsSearchFocused] = React.useState(false);
+	const [showContact, setShowContact] = React.useState(false);
 	const [isSearchLoading, setIsSearchLoading] = React.useState(false);
 	const searchContainerRef = React.useRef<HTMLDivElement>(null);
 
@@ -211,7 +213,7 @@ const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
 	return (
 		<>
 			<header
-				className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-4 md:px-6 justify-between"
+				className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-4 md:px-6 justify-between dark:bg-gradient-to-b dark:from-neutral-900/90 dark:to-neutral-950/90 dark:border-b-neutral-700/60 dark:shadow-[inset_0_-1px_0_rgba(255,255,255,0.04),0_2px_4px_rgba(0,0,0,0.6)]"
 				style={headerStyle}
 			>
 				<div className="flex items-center gap-4 no-drag">
@@ -265,9 +267,12 @@ const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
 								</Link>
 							</NavigationMenuItem>
 							<NavigationMenuItem>
-								<Link to="/contact" className={navigationMenuTriggerStyle()}>
+								<button
+									onClick={() => setShowContact(true)}
+									className={navigationMenuTriggerStyle()}
+								>
 									Contact
-								</Link>
+								</button>
 							</NavigationMenuItem>
 						</NavigationMenuList>
 					</NavigationMenu>
@@ -476,6 +481,8 @@ const WorkspaceHeader: React.FC<WorkspaceHeaderProps> = ({
 					</DrawerContent>
 				</Drawer>
 			)}
+			{/* Contact modal */}
+			<ContactDialog open={showContact} onOpenChange={setShowContact} />
 		</>
 	);
 };

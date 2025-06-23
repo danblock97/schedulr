@@ -4,6 +4,7 @@ import type { User } from "@supabase/supabase-js";
 import WorkspaceSearch from "./WorkspaceSearch";
 import UpcomingEvents from "./UpcomingEvents";
 import MyTasks from "./MyTasks";
+import StatsOverview from "./StatsOverview";
 import { motion } from "framer-motion";
 import Logo from "@/components/Logo";
 
@@ -43,6 +44,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
 			<motion.div className="flex items-center gap-3" variants={itemVariants}>
 				<Logo className="h-8 w-8" />
 				<h1 className="text-3xl font-bold">Good afternoon, {username}</h1>
+			</motion.div>
+			<motion.div variants={itemVariants}>
+				<StatsOverview userId={user.id} />
 			</motion.div>
 			<motion.div variants={itemVariants}>
 				<WorkspaceSearch />
