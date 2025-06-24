@@ -81,6 +81,10 @@
 					};
 					baseText = map[status] || status;
 					dotCount = 0;
+
+					if (status === "update-downloaded") {
+						window.electron.installUpdate();
+					}
 				});
 			});
 		</script>
