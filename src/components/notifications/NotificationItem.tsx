@@ -21,30 +21,42 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
 	const getNotificationMessage = (notification: Notification): string => {
 		switch (notification.type) {
 			case "TASKS_DUE_TODAY":
-				const taskCount = (notification.data as { count?: number })?.count || 0;
-				if (taskCount > 1) {
-					return `You have ${taskCount} tasks due today.`;
+				const data = notification.data as {
+					count?: number;
+					tasks?: { text: string }[];
+				};
+				const count = data?.count || 0;
+				const tasks = data?.tasks || [];
+
+				if (count === 0) {
+					return "You have no tasks due today.";
 				}
-				return `You have 1 task due today.`;
+				if (count === 1 && tasks.length === 1) {
+					return `Task "${tasks[0].text}" is due today.`;
+				}
+				if (count > 1 && tasks.length === 1) {
+					return `Task "${tasks[0].text}" and ${
+						count - 1
+					} other task(s) are due today.`;
+				}
+				if (count > 1) {
+					return `You have ${count} tasks due today.`;
+				}
+				return "You have a task due today.";
 			default:
 				return "You have a new notification.";
 		}
 	};
 
 	const handleClick = async () => {
-		if (!notification.is_read) {
-			await supabase
-				.from("notifications")
-				.update({ is_read: true })
-				.eq("id", notification.id);
+		await supabase.from("notifications").delete().eq("id", notification.id);
 
-			queryClient.invalidateQueries({
-				queryKey: ["notifications", notification.user_id],
-			});
-			queryClient.invalidateQueries({
-				queryKey: ["unread_notifications_count", notification.user_id],
-			});
-		}
+		queryClient.invalidateQueries({
+			queryKey: ["notifications", notification.user_id],
+		});
+		queryClient.invalidateQueries({
+			queryKey: ["unread_notifications_count", notification.user_id],
+		});
 	};
 
 	const content = (
@@ -55,7 +67,7 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
 				)}
 			</div>
 			<div className="flex-1">
-				<p className={cn("text-sm", !notification.is_read && "font-semibold")}>
+				<p className={cn("text-sm", "font-semibold")}>
 					{getNotificationMessage(notification)}
 				</p>
 				<p className="text-xs text-muted-foreground mt-0.5">
