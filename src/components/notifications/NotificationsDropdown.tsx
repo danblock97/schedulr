@@ -45,16 +45,12 @@ const NotificationsDropdown: React.FC<NotificationsDropdownProps> = ({
 		queryFn: () => fetchNotifications(userId),
 	});
 
-	const markAllAsReadMutation = useMutation({
+	const clearAllMutation = useMutation({
 		mutationFn: async () => {
-			const unreadNotificationIds =
-				notifications?.filter((n) => !n.is_read).map((n) => n.id) ?? [];
-			if (unreadNotificationIds.length === 0) return;
-
 			const { error } = await supabase
 				.from("notifications")
-				.update({ is_read: true })
-				.in("id", unreadNotificationIds);
+				.delete()
+				.eq("user_id", userId);
 
 			if (error) throw error;
 		},
@@ -67,10 +63,10 @@ const NotificationsDropdown: React.FC<NotificationsDropdownProps> = ({
 		onError: (error) => {
 			toast({
 				title: "Error",
-				description: "Could not mark all as read.",
+				description: "Could not clear all notifications.",
 				variant: "destructive",
 			});
-			console.error("Error marking notifications as read", error);
+			console.error("Error clearing notifications", error);
 		},
 	});
 
@@ -84,15 +80,14 @@ const NotificationsDropdown: React.FC<NotificationsDropdownProps> = ({
 					<Button
 						variant="link"
 						size="sm"
-						onClick={() => markAllAsReadMutation.mutate()}
+						onClick={() => clearAllMutation.mutate()}
 						disabled={
-							markAllAsReadMutation.isPending ||
-							!notifications?.some((n) => !n.is_read)
+							clearAllMutation.isPending ||
+							!notifications ||
+							notifications.length === 0
 						}
 					>
-						{markAllAsReadMutation.isPending
-							? "Updating..."
-							: "Mark all as read"}
+						{clearAllMutation.isPending ? "Clearing..." : "Clear all"}
 					</Button>
 				</div>
 			</div>
