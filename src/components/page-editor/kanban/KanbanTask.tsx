@@ -10,6 +10,9 @@ import {
 	CheckCircle2,
 	XCircle,
 	MessageCircle,
+	MoreHorizontal,
+	GripVertical,
+	Edit,
 } from "lucide-react";
 import { Task } from "./types";
 import { Badge } from "@/components/ui/badge";
@@ -27,6 +30,20 @@ import type { UniqueIdentifier } from "@dnd-kit/core";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
 import IssueTypeIcon from "./IssueTypeIcon";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import type { Tables } from "@/integrations/supabase/types";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipProvider,
+	TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface KanbanTaskProps {
 	task: Task;
@@ -34,6 +51,7 @@ interface KanbanTaskProps {
 	onEditTask: (id: UniqueIdentifier) => void;
 	onDeleteTask: (id: UniqueIdentifier) => void;
 	columnTitle?: string;
+	members: Tables<"profiles">[];
 }
 
 const KanbanTask: React.FC<KanbanTaskProps> = ({
@@ -42,6 +60,7 @@ const KanbanTask: React.FC<KanbanTaskProps> = ({
 	onEditTask,
 	onDeleteTask,
 	columnTitle,
+	members,
 }) => {
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
@@ -65,6 +84,11 @@ const KanbanTask: React.FC<KanbanTaskProps> = ({
 		transform: CSS.Transform.toString(transform),
 	};
 
+	const assignee = React.useMemo(() => {
+		if (!task.assignee || !members) return null;
+		return members.find((member) => member.id === task.assignee);
+	}, [task.assignee, members]);
+
 	const handleEdit = () => {
 		onEditTask(task.id);
 	};
@@ -74,7 +98,7 @@ const KanbanTask: React.FC<KanbanTaskProps> = ({
 			<div
 				ref={setNodeRef}
 				style={style}
-				className="p-2.5 bg-accent ring-2 ring-primary rounded-xl h-[60px] w-full"
+				className="p-2.5 h-[100px] min-h-[100px] items-center flex text-left rounded-xl border border-dashed bg-background/80"
 			/>
 		);
 	}
@@ -191,7 +215,23 @@ const KanbanTask: React.FC<KanbanTaskProps> = ({
 								)}
 							</div>
 							<div className="flex items-center gap-3 text-muted-foreground">
-								{task.assignee && <User className="h-4 w-4" />}
+								{assignee && (
+									<TooltipProvider>
+										<Tooltip>
+											<TooltipTrigger>
+												<Avatar className="h-6 w-6">
+													<AvatarImage src={assignee.avatar_url ?? ""} />
+													<AvatarFallback>
+														{assignee.username?.charAt(0).toUpperCase()}
+													</AvatarFallback>
+												</Avatar>
+											</TooltipTrigger>
+											<TooltipContent>
+												<p>Assigned to {assignee.username || "User"}</p>
+											</TooltipContent>
+										</Tooltip>
+									</TooltipProvider>
+								)}
 								{task.endDate && (
 									<div className="flex items-center gap-1">
 										<Calendar className="h-4 w-4" />
@@ -205,6 +245,31 @@ const KanbanTask: React.FC<KanbanTaskProps> = ({
 					)}
 				</CardContent>
 			</Card>
+
+			<div className="absolute top-1 right-8 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+				<DropdownMenu>
+					<DropdownMenuTrigger asChild>
+						<Button
+							variant="ghost"
+							size="icon"
+							className="h-7 w-7 bg-background/50 backdrop-blur-sm"
+						>
+							<MoreHorizontal className="h-4 w-4" />
+						</Button>
+					</DropdownMenuTrigger>
+					<DropdownMenuContent>
+						<DropdownMenuItem onSelect={() => onEditTask(task.id)}>
+							<Edit className="mr-2 h-4 w-4" /> Open
+						</DropdownMenuItem>
+						<DropdownMenuItem
+							onSelect={() => onDeleteTask(task.id)}
+							className="text-destructive focus:text-destructive"
+						>
+							<Trash2 className="mr-2 h-4 w-4" /> Delete
+						</DropdownMenuItem>
+					</DropdownMenuContent>
+				</DropdownMenu>
+			</div>
 		</motion.div>
 	);
 };
