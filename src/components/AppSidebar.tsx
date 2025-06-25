@@ -33,6 +33,7 @@ import {
 	Calendar,
 	ListTodo,
 	Briefcase,
+	Coffee,
 	LifeBuoy,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -318,6 +319,19 @@ const AppSidebar = () => {
 								<Settings className="h-5 w-5" />
 								<span className="group-data-[collapsible=icon]:hidden">
 									Settings
+								</span>
+							</SidebarMenuButton>
+						</SidebarMenuItem>
+						<SidebarMenuItem>
+							<SidebarMenuButton
+								onClick={() =>
+									window.open("https://coff.ee/danblock97", "_blank")
+								}
+								tooltip="Buy me a coffee"
+							>
+								<Coffee className="h-5 w-5" />
+								<span className="group-data-[collapsible=icon]:hidden">
+									Buy me a coffee
 								</span>
 							</SidebarMenuButton>
 						</SidebarMenuItem>
