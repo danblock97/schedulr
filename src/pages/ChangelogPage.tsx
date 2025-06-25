@@ -17,13 +17,38 @@ export const CHANGELOG: ChangelogEntry[] = [
 		date: new Date().toISOString().split("T")[0],
 		summary: "Latest improvements and fixes.",
 		changes: [
-			"- Fix installer taking a while to install",
-			"- Electron documentation window also loads with main app window when the app boots from pc start-up",
-			"- Task description textarea does not allow for spellcheck via right click to fix mistakes",
-			"- Desktop custom horizontal scrollbar needs adding",
+			"- Kanban description now allowed for text formatting",
+			"- Assignee's on tasks have been improved visually",
+			"- Developer Support option has been added to the app",
 		],
 	},
-
+	{
+		version: "1.0.9",
+		date: "2025-06-24",
+		summary: "Latest improvements and fixes.",
+		changes: [
+			"- Fixed notifications not showing",
+			"- Fixed installer window timing out on new app updates",
+		],
+	},
+	{
+		version: "1.0.8",
+		date: "2025-06-23",
+		summary: "Latest improvements and fixes.",
+		changes: ["- UI Enhancements for Dark Mode"],
+	},
+	{
+		version: "1.0.7",
+		date: "2025-06-22",
+		summary: "Latest improvements and fixes.",
+		changes: [
+			"- Update Changelog for 1.0.6",
+			"- Fix installer taking a while to install",
+			"- Fix electron documentation window loading with main app window when the app boots from pc start-up",
+			"- Fix task description textarea does not allow for spellcheck via right click to fix mistakes",
+			"- Fix desktop custom horizontal scrollbar needs adding",
+		],
+	},
 	{
 		version: "1.0.6",
 		date: "2025-06-21",
