@@ -41,6 +41,7 @@ export interface Task {
 	attachments?: Attachment[];
 	// content field is deprecated, will be migrated to summary
 	content?: string;
+	createdAt: string;
 }
 
 export interface Column {

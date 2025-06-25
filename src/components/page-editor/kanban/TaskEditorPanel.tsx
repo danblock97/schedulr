@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import {
 	Select,
 	SelectContent,
@@ -23,7 +22,6 @@ import {
 import {
 	Form,
 	FormControl,
-	FormDescription,
 	FormField,
 	FormItem,
 	FormLabel,
@@ -40,6 +38,10 @@ import { useToast } from "@/components/ui/use-toast";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { Tables } from "@/integrations/supabase/types";
+import MDEditor from "@uiw/react-md-editor";
+import "@uiw/react-md-editor/markdown-editor.css";
+import "@uiw/react-markdown-preview/markdown.css";
+import IssueTypeIcon from "./IssueTypeIcon";
 
 interface TaskEditorPanelProps {
 	task: Task | null;
@@ -94,6 +96,7 @@ const TaskEditorPanel: React.FC<TaskEditorPanelProps> = ({
 	);
 	const fileInputRef = React.useRef<HTMLInputElement>(null);
 	const [preview, setPreview] = React.useState<Attachment | null>(null);
+	const [isEditingDescription, setIsEditingDescription] = React.useState(false);
 
 	const form = useForm<z.infer<typeof taskSchema>>({
 		resolver: zodResolver(taskSchema),
@@ -103,6 +106,8 @@ const TaskEditorPanel: React.FC<TaskEditorPanelProps> = ({
 			assignee: "",
 		},
 	});
+
+	const [colorMode, setColorMode] = React.useState<"light" | "dark">("light");
 
 	React.useEffect(() => {
 		const fetchUser = async () => {
@@ -120,6 +125,23 @@ const TaskEditorPanel: React.FC<TaskEditorPanelProps> = ({
 			}
 		};
 		fetchUser();
+
+		const checkTheme = () => {
+			const isDark = document.documentElement.classList.contains("dark");
+			setColorMode(isDark ? "dark" : "light");
+		};
+
+		checkTheme();
+
+		const observer = new MutationObserver(checkTheme);
+		observer.observe(document.documentElement, {
+			attributes: true,
+			attributeFilter: ["class"],
+		});
+
+		return () => {
+			observer.disconnect();
+		};
 	}, []);
 
 	React.useEffect(() => {
@@ -238,9 +260,8 @@ const TaskEditorPanel: React.FC<TaskEditorPanelProps> = ({
 		onSave({ ...task!, attachments: updated });
 	};
 
-	if (!task) return null;
-
-	const onSubmit = (values: z.infer<typeof taskSchema>) => {
+	const handleSave = (values: z.infer<typeof taskSchema>) => {
+		if (!task) return;
 		const updatedTask: Task = {
 			...task,
 			...values,
@@ -251,53 +272,113 @@ const TaskEditorPanel: React.FC<TaskEditorPanelProps> = ({
 			endDate: values.endDate?.toISOString(),
 		};
 		onSave(updatedTask);
+		toast({
+			title: "Task saved",
+			description: `${updatedTask.summary} has been updated.`,
+		});
+	};
+
+	const onSubmit = (values: z.infer<typeof taskSchema>) => {
+		handleSave(values);
 		onClose();
 	};
 
+	const onDescriptionSave = (values: z.infer<typeof taskSchema>) => {
+		handleSave(values);
+		setIsEditingDescription(false);
+	};
+
+	const handleCancelDescriptionEdit = () => {
+		form.setValue("description", task?.description || "");
+		setIsEditingDescription(false);
+	};
+
+	if (!task) return null;
+
+	const descriptionDisplay = isEditingDescription ? (
+		<div className="space-y-2">
+			<div data-color-mode={colorMode}>
+				<MDEditor
+					value={form.watch("description")}
+					onChange={(value) => form.setValue("description", value)}
+					preview="edit"
+				/>
+			</div>
+			<div className="flex justify-end gap-2">
+				<Button
+					type="button"
+					variant="ghost"
+					onClick={handleCancelDescriptionEdit}
+				>
+					Cancel
+				</Button>
+				<Button type="button" onClick={form.handleSubmit(onDescriptionSave)}>
+					Save
+				</Button>
+			</div>
+		</div>
+	) : (
+		<div
+			className="max-w-none p-3 border rounded-md min-h-[100px] cursor-pointer hover:border-primary/50 transition-colors"
+			onClick={() => setIsEditingDescription(true)}
+		>
+			{form.watch("description") ? (
+				<div data-color-mode={colorMode}>
+					<MDEditor.Markdown
+						source={form.watch("description")}
+						style={{ backgroundColor: "transparent" }}
+					/>
+				</div>
+			) : (
+				<span className="text-muted-foreground">Add a description...</span>
+			)}
+		</div>
+	);
+
 	return (
-		<Sheet open={isOpen} onOpenChange={onClose}>
-			<SheetContent className="w-full sm:max-w-xl md:max-w-2xl flex flex-col">
-				<SheetHeader>
-					<SheetTitle>Edit Task</SheetTitle>
-					<SheetDescription>Update the details of your task.</SheetDescription>
+		<Sheet
+			open={isOpen}
+			onOpenChange={(open) => {
+				if (!open) {
+					onClose();
+				}
+			}}
+		>
+			<SheetContent className="w-full sm:max-w-2xl flex flex-col !p-0">
+				<SheetHeader className="p-6 pb-0">
+					<SheetTitle>
+						<FormField
+							control={form.control}
+							name="summary"
+							render={({ field }) => (
+								<Input
+									{...field}
+									className="text-2xl font-bold border-none !ring-offset-0 !ring-0 !shadow-none p-0 h-auto"
+									placeholder="Task summary"
+								/>
+							)}
+						/>
+					</SheetTitle>
 				</SheetHeader>
-				<ScrollArea className="flex-grow pr-6 -mr-6">
+				<ScrollArea className="flex-grow">
 					<Form {...form}>
 						<form
 							onSubmit={form.handleSubmit(onSubmit)}
-							className="space-y-6 py-4"
+							className="px-6 pb-6 space-y-6"
 						>
-							<FormField
-								control={form.control}
-								name="summary"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Summary</FormLabel>
-										<FormControl>
-											<Input placeholder="e.g. Fix login button" {...field} />
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
 							<FormField
 								control={form.control}
 								name="description"
 								render={({ field }) => (
 									<FormItem>
 										<FormLabel>Description</FormLabel>
-										<FormControl>
-											<Textarea
-												placeholder="Add more details about the task..."
-												{...field}
-												className="min-h-[120px]"
-											/>
-										</FormControl>
+										<FormControl>{descriptionDisplay}</FormControl>
 										<FormMessage />
 									</FormItem>
 								)}
 							/>
-							<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+							<div className="grid grid-cols-2 gap-4">
 								<FormField
 									control={form.control}
 									name="issueType"
@@ -306,17 +387,34 @@ const TaskEditorPanel: React.FC<TaskEditorPanelProps> = ({
 											<FormLabel>Issue Type</FormLabel>
 											<Select
 												onValueChange={field.onChange}
-												value={field.value || "unassigned"}
+												value={field.value}
+												defaultValue={field.value}
 											>
 												<FormControl>
 													<SelectTrigger>
-														<SelectValue placeholder="Select issue type" />
+														<SelectValue>
+															<div className="flex items-center gap-2">
+																<IssueTypeIcon
+																	type={field.value as IssueType}
+																	className="h-4 w-4"
+																/>
+																<span>
+																	{field.value || "Select an issue type"}
+																</span>
+															</div>
+														</SelectValue>
 													</SelectTrigger>
 												</FormControl>
 												<SelectContent>
 													{issueTypes.map((type) => (
 														<SelectItem key={type} value={type}>
-															{type}
+															<div className="flex items-center gap-2">
+																<IssueTypeIcon
+																	type={type}
+																	className="h-4 w-4"
+																/>
+																<span>{type}</span>
+															</div>
 														</SelectItem>
 													))}
 												</SelectContent>
@@ -333,7 +431,7 @@ const TaskEditorPanel: React.FC<TaskEditorPanelProps> = ({
 											<FormLabel>Priority</FormLabel>
 											<Select
 												onValueChange={field.onChange}
-												value={field.value || "unassigned"}
+												defaultValue={field.value}
 											>
 												<FormControl>
 													<SelectTrigger>
@@ -353,6 +451,42 @@ const TaskEditorPanel: React.FC<TaskEditorPanelProps> = ({
 									)}
 								/>
 							</div>
+
+							<div className="grid grid-cols-2 gap-4">
+								<FormField
+									control={form.control}
+									name="startDate"
+									render={({ field }) => (
+										<FormItem className="flex flex-col">
+											<FormLabel>Start Date</FormLabel>
+											<FormControl>
+												<DatePicker
+													date={field.value}
+													setDate={field.onChange}
+												/>
+											</FormControl>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+								<FormField
+									control={form.control}
+									name="endDate"
+									render={({ field }) => (
+										<FormItem className="flex flex-col">
+											<FormLabel>End Date</FormLabel>
+											<FormControl>
+												<DatePicker
+													date={field.value}
+													setDate={field.onChange}
+												/>
+											</FormControl>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+							</div>
+
 							<FormField
 								control={form.control}
 								name="assignee"
@@ -361,15 +495,16 @@ const TaskEditorPanel: React.FC<TaskEditorPanelProps> = ({
 										<FormLabel>Assignee</FormLabel>
 										<Select
 											onValueChange={field.onChange}
+											value={field.value}
 											defaultValue={field.value}
 										>
 											<FormControl>
 												<SelectTrigger>
-													<SelectValue placeholder="Select assignee" />
+													<SelectValue placeholder="Assign to a team member" />
 												</SelectTrigger>
 											</FormControl>
 											<SelectContent>
-												<SelectItem value="unassigned">Unassigned</SelectItem>
+												<SelectItem value={"unassigned"}>Unassigned</SelectItem>
 												{members.map((member) => (
 													<SelectItem key={member.id} value={member.id}>
 														<div className="flex items-center gap-2">
@@ -389,212 +524,166 @@ const TaskEditorPanel: React.FC<TaskEditorPanelProps> = ({
 									</FormItem>
 								)}
 							/>
-							<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-								<FormField
-									control={form.control}
-									name="startDate"
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel>Start Date</FormLabel>
-											<FormControl>
-												<DatePicker
-													date={field.value}
-													setDate={field.onChange}
-												/>
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
-								<FormField
-									control={form.control}
-									name="endDate"
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel>End Date</FormLabel>
-											<FormControl>
-												<DatePicker
-													date={field.value}
-													setDate={field.onChange}
-												/>
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
+
+							{/* Attachments Section */}
+							<div>
+								<h3 className="text-lg font-semibold mb-2">Attachments</h3>
+								<div className="space-y-2">
+									{attachments.map((file) => (
+										<div
+											key={file.id}
+											className="flex items-center justify-between p-2 bg-muted rounded-md"
+										>
+											<a
+												href={file.url}
+												target="_blank"
+												rel="noopener noreferrer"
+												className="flex items-center gap-2 text-sm hover:underline"
+												onClick={(e) => {
+													e.stopPropagation();
+													if (
+														file.mimeType.startsWith("image/") ||
+														file.mimeType === "application/pdf"
+													) {
+														e.preventDefault();
+														setPreview(file);
+													}
+												}}
+											>
+												<Paperclip className="h-4 w-4" />
+												<span>{file.name}</span>
+												<span className="text-xs text-muted-foreground">
+													({(file.size / 1024).toFixed(2)} KB)
+												</span>
+											</a>
+											<Button
+												variant="ghost"
+												size="icon"
+												className="h-6 w-6"
+												onClick={() => handleRemoveAttachment(file.id)}
+											>
+												<X className="h-4 w-4" />
+											</Button>
+										</div>
+									))}
+								</div>
+								<Button
+									type="button"
+									variant="outline"
+									className="mt-2 w-full"
+									onClick={() => fileInputRef.current?.click()}
+								>
+									<Upload className="h-4 w-4 mr-2" />
+									Add attachment
+								</Button>
+								<input
+									type="file"
+									ref={fileInputRef}
+									className="hidden"
+									onChange={handleFileChange}
+									multiple
 								/>
 							</div>
-							{/* Comments section */}
-							<div className="pt-4 border-t">
-								<h3 className="text-sm font-medium mb-2">Comments</h3>
-								<div className="space-y-3 max-h-48 overflow-y-auto pr-2">
-									{comments.length > 0 ? (
-										comments.map((c) => (
-											<div key={c.id} className="border rounded-md p-2 text-sm">
-												<p className="whitespace-pre-wrap break-words">
-													{c.text}
+
+							{/* Comments Section */}
+							<div>
+								<h3 className="text-lg font-semibold mb-2">Comments</h3>
+								<div className="space-y-4">
+									{comments.map((comment) => (
+										<div key={comment.id} className="flex items-start gap-3">
+											<Avatar className="h-8 w-8">
+												<AvatarImage />
+												<AvatarFallback>
+													{comment.authorName?.charAt(0).toUpperCase() || "?"}
+												</AvatarFallback>
+											</Avatar>
+											<div className="flex-1">
+												<div className="flex items-center gap-2">
+													<span className="font-semibold text-sm">
+														{comment.authorName || "Anonymous"}
+													</span>
+													<span className="text-xs text-muted-foreground">
+														{new Date(comment.createdAt).toLocaleString()}
+													</span>
+												</div>
+												<p className="text-sm text-muted-foreground mt-1">
+													{comment.text}
 												</p>
-												<span className="text-xs text-muted-foreground block mt-1">
-													{c.authorName
-														? `${c.authorName} • `
-														: c.authorEmail
-														? `${c.authorEmail} • `
-														: ""}
-													{new Date(c.createdAt).toLocaleString()}
-												</span>
 											</div>
-										))
-									) : (
-										<p className="text-muted-foreground text-sm">
-											No comments yet.
-										</p>
-									)}
+										</div>
+									))}
 								</div>
-								<div className="mt-3 flex gap-2">
-									<Textarea
+								<div className="mt-4 flex gap-2">
+									<Input
 										value={newComment}
 										onChange={(e) => setNewComment(e.target.value)}
 										placeholder="Add a comment..."
-										className="flex-grow min-h-[80px]"
+										onKeyDown={(e) => {
+											if (e.key === "Enter" && !e.shiftKey) {
+												e.preventDefault();
+												handleAddComment();
+											}
+										}}
 									/>
-									<Button
-										type="button"
-										onClick={handleAddComment}
-										disabled={!newComment.trim()}
-									>
-										Add
-									</Button>
-								</div>
-							</div>
-							{/* Attachments Section */}
-							<div className="pt-4 border-t">
-								<h3 className="text-sm font-medium mb-2 flex items-center gap-2">
-									<Paperclip className="h-4 w-4" /> Attachments
-								</h3>
-								{attachments.length > 0 && (
-									<ul className="space-y-2 mb-2">
-										{attachments.map((att) => (
-											<li
-												key={att.id}
-												className="flex items-center justify-between text-sm"
-											>
-												<button
-													type="button"
-													onClick={() => setPreview(att)}
-													className="underline text-left"
-												>
-													{att.name}
-												</button>
-												<Button
-													variant="ghost"
-													size="icon"
-													onClick={() => handleRemoveAttachment(att.id)}
-												>
-													<X className="h-4 w-4" />
-												</Button>
-											</li>
-										))}
-									</ul>
-								)}
-								<input
-									type="file"
-									id="task-file-input"
-									ref={fileInputRef}
-									className="hidden"
-									multiple
-									onChange={handleFileChange}
-								/>
-								<Button
-									variant="outline"
-									size="sm"
-									type="button"
-									onClick={() => fileInputRef.current?.click()}
-								>
-									<Paperclip className="h-4 w-4 mr-2" /> Add File
-								</Button>
-								<div
-									className="mt-2 p-4 border-dashed border rounded-md text-center text-sm text-muted-foreground"
-									onDragOver={(e) => {
-										e.preventDefault();
-										e.stopPropagation();
-									}}
-									onDrop={async (e) => {
-										e.preventDefault();
-										e.stopPropagation();
-										if (e.dataTransfer.files && e.dataTransfer.files.length) {
-											await uploadFiles(e.dataTransfer.files);
-										}
-									}}
-								>
-									<Upload className="h-6 w-6 mx-auto mb-1" />
-									Drag & drop files here
+									<Button onClick={handleAddComment}>Send</Button>
 								</div>
 							</div>
 						</form>
 					</Form>
 				</ScrollArea>
-				<SheetFooter>
-					<Button type="button" variant="outline" onClick={onClose}>
-						Cancel
-					</Button>
-					<Button type="submit" onClick={form.handleSubmit(onSubmit)}>
-						Save changes
-					</Button>
+				<SheetFooter className="flex-col sm:flex-row sm:justify-between items-center gap-2 pt-4 border-t">
+					<div>
+						{task.createdAt && (
+							<span className="text-xs text-muted-foreground">
+								Created on {new Date(task.createdAt).toLocaleDateString()}
+							</span>
+						)}
+					</div>
+					<div className="flex gap-2">
+						<Button variant="outline" onClick={onClose}>
+							Cancel
+						</Button>
+						<Button onClick={form.handleSubmit(onSubmit)}>Save Changes</Button>
+					</div>
 				</SheetFooter>
 				{preview && (
-					<Dialog open onOpenChange={() => setPreview(null)}>
-						<DialogContent className="max-w-3xl">
-							<div className="flex justify-between items-center mb-2">
-								<p className="font-medium truncate">{preview.name}</p>
-							</div>
-							{preview.mimeType.startsWith("image/") ? (
-								<img
-									src={preview.url}
-									alt={preview.name}
-									className="max-h-[70vh] mx-auto"
-								/>
-							) : preview.mimeType.startsWith("video/") ? (
-								<video
-									src={preview.url}
-									controls
-									className="max-h-[70vh] w-full"
-								/>
-							) : preview.mimeType === "application/pdf" ? (
-								<iframe src={preview.url} className="w-full h-[70vh]" />
-							) : (
-								(() => {
-									const officeMimeTypes = [
-										"application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-										"application/msword",
-										"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-										"application/vnd.ms-excel",
-										"application/vnd.openxmlformats-officedocument.presentationml.presentation",
-										"application/vnd.ms-powerpoint",
-									];
-									if (officeMimeTypes.includes(preview.mimeType)) {
-										return (
-											<iframe
-												src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(
-													preview.url
-												)}`}
-												className="w-full h-[70vh]"
-											/>
-										);
-									}
+					<Dialog open={!!preview} onOpenChange={() => setPreview(null)}>
+						<DialogContent className="max-w-4xl max-h-[90vh]">
+							{(() => {
+								if (preview.mimeType.startsWith("image/")) {
 									return (
-										<div className="h-[70vh] flex flex-col items-center justify-center text-center space-y-4">
-											<p>Preview not available for this file type.</p>
-											<a
-												href={preview.url}
-												target="_blank"
-												rel="noopener noreferrer"
-												className="underline"
-											>
-												Download / Open in new tab
-											</a>
-										</div>
+										<img
+											src={preview.url}
+											alt={preview.name}
+											className="max-w-full max-h-[80vh] object-contain"
+										/>
 									);
-								})()
-							)}
+								}
+								if (preview.mimeType === "application/pdf") {
+									return (
+										<iframe
+											src={preview.url}
+											className="w-full h-[80vh]"
+											title={preview.name}
+										/>
+									);
+								}
+								return (
+									<div className="p-4">
+										<h3 className="font-bold mb-2">
+											Unsupported file type for preview
+										</h3>
+										<p>You can download the file to view it.</p>
+										<a
+											href={preview.url}
+											download
+											className="text-primary hover:underline mt-2 inline-block"
+										>
+											Download {preview.name}
+										</a>
+									</div>
+								);
+							})()}
 						</DialogContent>
 					</Dialog>
 				)}
