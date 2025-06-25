@@ -38,12 +38,15 @@ import type { UniqueIdentifier } from "@dnd-kit/core";
 import { Paperclip, X, Upload } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import type { Tables } from "@/integrations/supabase/types";
 
 interface TaskEditorPanelProps {
 	task: Task | null;
 	isOpen: boolean;
 	onClose: () => void;
 	onSave: (updatedTask: Task) => void;
+	members: Tables<"profiles">[];
 }
 
 const issueTypes: IssueType[] = [
@@ -72,6 +75,7 @@ const TaskEditorPanel: React.FC<TaskEditorPanelProps> = ({
 	isOpen,
 	onClose,
 	onSave,
+	members,
 }) => {
 	const [currentUser, setCurrentUser] = React.useState<User | null>(null);
 	const { toast } = useToast();
@@ -357,7 +361,7 @@ const TaskEditorPanel: React.FC<TaskEditorPanelProps> = ({
 										<FormLabel>Assignee</FormLabel>
 										<Select
 											onValueChange={field.onChange}
-											value={field.value || "unassigned"}
+											defaultValue={field.value}
 										>
 											<FormControl>
 												<SelectTrigger>
@@ -366,11 +370,19 @@ const TaskEditorPanel: React.FC<TaskEditorPanelProps> = ({
 											</FormControl>
 											<SelectContent>
 												<SelectItem value="unassigned">Unassigned</SelectItem>
-												{currentUser && (
-													<SelectItem value={currentUser.id}>
-														{currentUser.email}
+												{members.map((member) => (
+													<SelectItem key={member.id} value={member.id}>
+														<div className="flex items-center gap-2">
+															<Avatar className="h-5 w-5">
+																<AvatarImage src={member.avatar_url ?? ""} />
+																<AvatarFallback>
+																	{member.username?.charAt(0).toUpperCase()}
+																</AvatarFallback>
+															</Avatar>
+															<span>{member.username}</span>
+														</div>
 													</SelectItem>
-												)}
+												))}
 											</SelectContent>
 										</Select>
 										<FormMessage />

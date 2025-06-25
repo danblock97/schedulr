@@ -58,6 +58,7 @@ const KanbanEditor: React.FC<KanbanEditorProps> = ({
 		"idle" | "unsaved" | "saving"
 	>("idle");
 	const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+	const [members, setMembers] = useState<Tables<"profiles">[]>([]);
 
 	// Use a ref to hold the latest pageData. Update it on every render.
 	// This avoids it being a dependency in the save effect, which would cause loops.
@@ -76,6 +77,39 @@ const KanbanEditor: React.FC<KanbanEditorProps> = ({
 			},
 		})
 	);
+
+	useEffect(() => {
+		const fetchMembers = async () => {
+			if (!pageData) return;
+
+			const ownerId = pageData.user_id;
+			const sharedWithIds = pageData.shared_with || [];
+			const memberIds = [...new Set([ownerId, ...sharedWithIds])];
+
+			if (memberIds.length === 0) {
+				setMembers([]);
+				return;
+			}
+
+			const { data, error } = await supabase
+				.from("profiles")
+				.select("*")
+				.in("id", memberIds);
+
+			if (error) {
+				toast({
+					title: "Error fetching members",
+					description: error.message,
+					variant: "destructive",
+				});
+				setMembers([]);
+			} else {
+				setMembers(data || []);
+			}
+		};
+
+		fetchMembers();
+	}, [pageData, toast]);
 
 	useEffect(() => {
 		// Syncs title from props, but not when user is actively editing or when there are pending changes.
@@ -268,6 +302,7 @@ const KanbanEditor: React.FC<KanbanEditorProps> = ({
 										onDeleteTask={deleteTask}
 										onUpdateColumn={updateColumn}
 										onDeleteColumn={deleteColumn}
+										members={members}
 									/>
 								))}
 							</AnimatePresence>
@@ -287,6 +322,7 @@ const KanbanEditor: React.FC<KanbanEditorProps> = ({
 								onDeleteTask={deleteTask}
 								onUpdateColumn={updateColumn}
 								onDeleteColumn={deleteColumn}
+								members={members}
 							/>
 						)}
 						{activeTask && (
@@ -295,6 +331,10 @@ const KanbanEditor: React.FC<KanbanEditorProps> = ({
 								isOverlay
 								onEditTask={handleEditTask}
 								onDeleteTask={deleteTask}
+								columnTitle={
+									columns.find((c) => c.id === activeTask.columnId)?.title ?? ""
+								}
+								members={members}
 							/>
 						)}
 					</DragOverlay>
@@ -305,6 +345,7 @@ const KanbanEditor: React.FC<KanbanEditorProps> = ({
 				onClose={() => setEditingTask(null)}
 				task={editingTask}
 				onSave={updateTaskDetails}
+				members={members}
 			/>
 		</div>
 	);

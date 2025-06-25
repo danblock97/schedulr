@@ -23,6 +23,7 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Tables } from "@/integrations/supabase/types";
 
 interface KanbanColumnProps {
 	column: Column;
@@ -33,6 +34,7 @@ interface KanbanColumnProps {
 	onDeleteTask: (id: UniqueIdentifier) => void;
 	onUpdateColumn: (id: UniqueIdentifier, title: string) => void;
 	onDeleteColumn: (id: UniqueIdentifier) => void;
+	members: Tables<"profiles">[];
 }
 
 const KanbanColumn: React.FC<KanbanColumnProps> = ({
@@ -44,6 +46,7 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
 	onDeleteTask,
 	onUpdateColumn,
 	onDeleteColumn,
+	members,
 }) => {
 	const [isEditingTitle, setIsEditingTitle] = useState(false);
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -163,7 +166,7 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
 					</DropdownMenu>
 				</div>
 			</div>
-			<div className="flex-grow flex flex-col gap-2 px-2 overflow-y-auto">
+			<div className="flex-grow flex flex-col gap-2 p-2 overflow-y-auto">
 				<SortableContext items={taskIds}>
 					{tasks.map((task) => (
 						<KanbanTask
@@ -172,6 +175,7 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
 							onEditTask={onEditTask}
 							onDeleteTask={onDeleteTask}
 							columnTitle={column.title}
+							members={members}
 						/>
 					))}
 				</SortableContext>
